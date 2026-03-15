@@ -235,7 +235,11 @@ class _StationSelectionPageState extends State<StationSelectionPage> {
               const Text('Chọn Trạm Làm Việc', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               const SizedBox(height: 24),
               // Ô CHỌN CHIẾN DỊCH
+              // Ô CHỌN CHIẾN DỊCH
               DropdownButtonFormField<String>(
+                // ✨ QUAN TRỌNG 1: Ép Dropdown không được phình to quá màn hình
+                isExpanded: true,
+
                 decoration: InputDecoration(
                   labelText: 'Chiến dịch',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -247,6 +251,8 @@ class _StationSelectionPageState extends State<StationSelectionPage> {
                   vm.activeCampaigns.isEmpty
                       ? 'Không có chiến dịch nào đang diễn ra'
                       : 'Chọn chiến dịch',
+                  maxLines: 1, // ✨ Cắt dòng
+                  overflow: TextOverflow.ellipsis, // ✨ Thêm dấu ... nếu quá dài
                   style: TextStyle(
                     color: vm.activeCampaigns.isEmpty ? Colors.red : Colors.grey.shade700,
                     fontWeight: vm.activeCampaigns.isEmpty ? FontWeight.bold : FontWeight.normal,
@@ -254,7 +260,14 @@ class _StationSelectionPageState extends State<StationSelectionPage> {
                 ),
                 items: vm.activeCampaigns.isEmpty
                     ? null
-                    : vm.activeCampaigns.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
+                    : vm.activeCampaigns.map((c) => DropdownMenuItem(
+                  value: c.id,
+                  child: Text(
+                    c.name,
+                    maxLines: 1, // ✨ QUAN TRỌNG 2: Không cho rớt dòng
+                    overflow: TextOverflow.ellipsis, // ✨ Tên chiến dịch dài sẽ thành "Khám sức khỏe..."
+                  ),
+                )).toList(),
                 onChanged: vm.activeCampaigns.isEmpty
                     ? null
                     : (val) => setState(() => _campaignId = val),
