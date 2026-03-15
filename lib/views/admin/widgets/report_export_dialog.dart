@@ -124,7 +124,13 @@ class _ReportExportDialogState extends State<ReportExportDialog> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                   icon: const Icon(Icons.share_rounded, size: 18),
-                  label: const Text('Xác nhận & Chia sẻ', style: TextStyle(fontWeight: FontWeight.bold)),
+                  label: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'Xác nhận & Chia sẻ',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ),
               ],
             )

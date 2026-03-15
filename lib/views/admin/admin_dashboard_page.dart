@@ -163,6 +163,225 @@
 //   }
 // }
 
+// import 'package:flutter/material.dart';
+// import 'admin_overview_page.dart';
+// import 'campaign_management_page.dart';
+// import 'student_management_page.dart';
+// import 'health_staff_management_page.dart';
+// import 'reports_page.dart';
+//
+// class AdminDashboardPage extends StatefulWidget {
+//   const AdminDashboardPage({super.key});
+//
+//   @override
+//   State<AdminDashboardPage> createState() => _AdminDashboardPageState();
+// }
+//
+// class _AdminDashboardPageState extends State<AdminDashboardPage> {
+//   int _currentIndex = 0;
+//
+//   final List<Map<String, dynamic>> _menuItems = [
+//     {'title': 'Tổng quan', 'icon': Icons.dashboard_rounded, 'color': Colors.blue.shade600},
+//     {'title': 'Chiến dịch', 'icon': Icons.event_note_rounded, 'color': Colors.teal.shade600},
+//     {'title': 'Sinh viên', 'icon': Icons.school_rounded, 'color': Colors.orange.shade600},
+//     {'title': 'Nhân viên', 'icon': Icons.medical_services_rounded, 'color': Colors.pink.shade400},
+//     {'title': 'Báo cáo', 'icon': Icons.analytics_rounded, 'color': Colors.deepPurple.shade500},
+//   ];
+//
+//   void _handleLogout() {
+//     Navigator.of(context).pushReplacementNamed('/');
+//   }
+//
+//   // void _openBulkEmailDialog() {
+//   //   ScaffoldMessenger.of(context).showSnackBar(
+//   //     const SnackBar(content: Text('Chức năng Gửi Email hàng loạt sẽ mở tại đây')),
+//   //   );
+//   // }
+//
+//   void _onSelectItem(int index) {
+//     setState(() {
+//       _currentIndex = index;
+//     });
+//     Navigator.of(context).pop();
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final List<Widget> pages = [
+//       const AdminOverviewPage(),
+//       const CampaignManagementPage(),
+//       const StudentManagementPage(),
+//       const HealthStaffManagementPage(),
+//       const ReportsPage(),
+//     ];
+//
+//     final currentMenu = _menuItems[_currentIndex];
+//
+//     return Scaffold(
+//       backgroundColor: Colors.grey.shade50,
+//
+//       appBar: AppBar(
+//         backgroundColor: Colors.white,
+//         foregroundColor: Colors.black87,
+//         elevation: 0,
+//         bottom: PreferredSize(
+//           preferredSize: const Size.fromHeight(1.0),
+//           child: Container(color: Colors.grey.shade200, height: 1.0),
+//         ),
+//         title: Row(
+//           children: [
+//             Container(
+//               padding: const EdgeInsets.all(6),
+//               decoration: BoxDecoration(
+//                 color: currentMenu['color'].withOpacity(0.1),
+//                 borderRadius: BorderRadius.circular(8),
+//               ),
+//               child: Icon(currentMenu['icon'], color: currentMenu['color'], size: 20),
+//             ),
+//             const SizedBox(width: 12),
+//             Text(
+//               currentMenu['title'],
+//               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+//             ),
+//           ],
+//         ),
+//         actions: [
+//           Padding(
+//             padding: const EdgeInsets.symmetric(horizontal: 16.0),
+//             child: Row(
+//               children: [
+//                 Column(
+//                   mainAxisAlignment: MainAxisAlignment.center,
+//                   crossAxisAlignment: CrossAxisAlignment.end,
+//                   children: [
+//                     const Text(
+//                       'Nguyễn Admin',
+//                       style: TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.bold),
+//                     ),
+//                     Text(
+//                       'Quản trị viên',
+//                       style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+//                     ),
+//                   ],
+//                 ),
+//                 const SizedBox(width: 12),
+//                 CircleAvatar(
+//                   radius: 18,
+//                   backgroundColor: Colors.blue.shade50,
+//                   child: Text('N', style: TextStyle(color: Colors.blue.shade700, fontWeight: FontWeight.bold, fontSize: 16)),
+//                 ),
+//               ],
+//             ),
+//           )
+//         ],
+//       ),
+//
+//       drawer: _buildDrawer(),
+//
+//       body: pages[_currentIndex],
+//
+//       // Đã xóa phần floatingActionButton ở đây để làm giao diện sạch sẽ hơn!
+//     );
+//   }
+//
+//   Widget _buildDrawer() {
+//     return Drawer(
+//       backgroundColor: Colors.white,
+//       child: Column(
+//         children: [
+//           Container(
+//             width: double.infinity,
+//             padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
+//             decoration: BoxDecoration(
+//               gradient: LinearGradient(
+//                 begin: Alignment.topLeft,
+//                 end: Alignment.bottomRight,
+//                 colors: [Colors.blue.shade700, Colors.blue.shade500],
+//               ),
+//             ),
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 Container(
+//                   padding: const EdgeInsets.all(12),
+//                   decoration: BoxDecoration(
+//                     color: Colors.white,
+//                     borderRadius: BorderRadius.circular(16),
+//                     boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+//                   ),
+//                   child: Icon(Icons.favorite_rounded, color: Colors.blue.shade600, size: 32),
+//                 ),
+//                 const SizedBox(height: 20),
+//                 const Text('Health Check', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+//                 Text('Hệ thống Quản trị v1.0', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13)),
+//               ],
+//             ),
+//           ),
+//
+//           const SizedBox(height: 12),
+//
+//           Expanded(
+//             child: ListView.builder(
+//               padding: const EdgeInsets.symmetric(horizontal: 12),
+//               itemCount: _menuItems.length,
+//               itemBuilder: (context, index) {
+//                 final item = _menuItems[index];
+//                 final isSelected = _currentIndex == index;
+//
+//                 return Padding(
+//                   padding: const EdgeInsets.only(bottom: 4),
+//                   child: ListTile(
+//                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+//                     leading: Icon(
+//                       item['icon'],
+//                       color: isSelected ? item['color'] : Colors.grey.shade500,
+//                     ),
+//                     title: Text(
+//                       item['title'],
+//                       style: TextStyle(
+//                         color: isSelected ? Colors.black87 : Colors.grey.shade700,
+//                         fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+//                         fontSize: 15,
+//                       ),
+//                     ),
+//                     selected: isSelected,
+//                     selectedTileColor: item['color'].withOpacity(0.08),
+//                     onTap: () => _onSelectItem(index),
+//                   ),
+//                 );
+//               },
+//             ),
+//           ),
+//
+//           Divider(color: Colors.grey.shade200, height: 1),
+//           Padding(
+//             padding: const EdgeInsets.all(16.0),
+//             child: InkWell(
+//               onTap: _handleLogout,
+//               borderRadius: BorderRadius.circular(12),
+//               child: Container(
+//                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+//                 decoration: BoxDecoration(
+//                   color: Colors.red.shade50,
+//                   borderRadius: BorderRadius.circular(12),
+//                 ),
+//                 child: Row(
+//                   children: [
+//                     Icon(Icons.logout_rounded, color: Colors.red.shade600, size: 20),
+//                     const SizedBox(width: 12),
+//                     Text('Đăng xuất', style: TextStyle(color: Colors.red.shade600, fontWeight: FontWeight.bold, fontSize: 15)),
+//                   ],
+//                 ),
+//               ),
+//             ),
+//           ),
+//           const SizedBox(height: 8),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
 import 'package:flutter/material.dart';
 import 'admin_overview_page.dart';
 import 'campaign_management_page.dart';
@@ -191,12 +410,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   void _handleLogout() {
     Navigator.of(context).pushReplacementNamed('/');
   }
-
-  // void _openBulkEmailDialog() {
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     const SnackBar(content: Text('Chức năng Gửi Email hàng loạt sẽ mở tại đây')),
-  //   );
-  // }
 
   void _onSelectItem(int index) {
     setState(() {
@@ -239,9 +452,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               child: Icon(currentMenu['icon'], color: currentMenu['color'], size: 20),
             ),
             const SizedBox(width: 12),
-            Text(
-              currentMenu['title'],
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+            // ✨ FIX: Bọc Expanded cho Title để tránh tràn lấn sang phần Actions
+            Expanded(
+              child: Text(
+                currentMenu['title'],
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
@@ -250,19 +468,27 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
               children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    const Text(
-                      'Nguyễn Admin',
-                      style: TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      'Quản trị viên',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                    ),
-                  ],
+                // ✨ FIX: Giới hạn chiều rộng của Text Admin để bảo vệ UI trên điện thoại nhỏ
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 120),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      const Text(
+                        'Nguyễn Admin',
+                        style: TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis, // Sẽ thành "Nguyễn Ad..." nếu quá dài
+                      ),
+                      Text(
+                        'Quản trị viên',
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(width: 12),
                 CircleAvatar(
@@ -279,8 +505,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       drawer: _buildDrawer(),
 
       body: pages[_currentIndex],
-
-      // Đã xóa phần floatingActionButton ở đây để làm giao diện sạch sẽ hơn!
     );
   }
 

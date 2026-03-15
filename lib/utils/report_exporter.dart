@@ -7,7 +7,7 @@ import 'package:printing/printing.dart';
 import 'package:excel/excel.dart';
 
 class ReportExporter {
-  // 1. HÀM XUẤT PDF (Nhận thêm Title và Notes)
+  // 1. HÀM XUẤT PDF
   static Future<void> exportPdf(Map<String, dynamic> bmiStats, Map<String, int> classStats, String reportTitle, String notes) async {
     final pdf = pw.Document();
 
@@ -46,12 +46,14 @@ class ReportExporter {
       ),
     );
 
-    // Xử lý chuỗi tên file an toàn
-    final safeFileName = reportTitle.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
+    // ✨ FIX LỖI: Sửa lại Regex lọc tên file để GIỮ NGUYÊN TIẾNG VIỆT
+    final safeFileName = reportTitle.replaceAll(RegExp(r'[\\/:*?"<>|]'), '').replaceAll(' ', '_');
+
+    // Lưu và chia sẻ PDF
     await Printing.sharePdf(bytes: await pdf.save(), filename: '${safeFileName}_Report.pdf');
   }
 
-  // 2. HÀM XUẤT EXCEL (Nhận thêm Title và Notes)
+  // 2. HÀM XUẤT EXCEL
   static Future<void> exportExcel(Map<String, dynamic> bmiStats, Map<String, int> classStats, String reportTitle, String notes) async {
     var excel = Excel.createExcel();
 
@@ -80,11 +82,16 @@ class ReportExporter {
 
     var fileBytes = excel.save();
     if (fileBytes != null) {
-      final safeFileName = reportTitle.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
+      // Tên file an toàn giữ nguyên tiếng Việt
+      final safeFileName = reportTitle.replaceAll(RegExp(r'[\\/:*?"<>|]'), '').replaceAll(' ', '_');
+
       final directory = await getTemporaryDirectory();
       final file = File('${directory.path}/${safeFileName}_Report.xlsx');
+
       await file.writeAsBytes(fileBytes);
-      await Share.shareXFiles([XFile(file.path)], text: reportTitle);
+
+      // Chia sẻ file Excel
+      await Share.shareXFiles([XFile(file.path)], text: 'Báo cáo: $reportTitle');
     }
   }
 }

@@ -1546,6 +1546,8 @@ class ReportsPage extends StatelessWidget {
     );
   }
 
+  // --- WIDGETS CON ---
+
   void _showExportDialog(BuildContext context, ReportsViewModel vm, String type) {
     if (vm.bmiStats == null) return;
 
@@ -1690,7 +1692,6 @@ class ReportsPage extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
-      // ✨ FIX: Thay đổi tỷ lệ chiều cao/rộng của thẻ để tránh tràn đáy (giảm từ 1.6 xuống 1.35)
       childAspectRatio: 1.35,
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
@@ -1718,13 +1719,11 @@ class ReportsPage extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          // ✨ FIX: Dùng FittedBox để tự động co lại nếu số đếm quá dài
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: color)),
           ),
-          // ✨ FIX: Đảm bảo dòng text phụ không bị xuống dòng làm tràn thẻ
           Text(sub, style: TextStyle(fontSize: 11, color: Colors.grey.shade500), maxLines: 1, overflow: TextOverflow.ellipsis),
         ],
       ),
@@ -1970,7 +1969,8 @@ class ReportsPage extends StatelessWidget {
                       children: [
                         Container(width: 10, height: 10, decoration: BoxDecoration(color: r['c'] as Color, borderRadius: BorderRadius.circular(2))),
                         const SizedBox(width: 8),
-                        Text('${r['l']}', style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.w500)),
+                        // ✨ ĐÃ SỬA: Bọc Expanded cho tên phân loại để tránh tràn 0.3 pixel
+                        Expanded(child: Text('${r['l']}', style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
                       ],
                     )
                 ),
