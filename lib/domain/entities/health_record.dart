@@ -21,7 +21,7 @@
 class HealthRecord {
   final String studentId;
   final String campaignId;
-  final Map<String, dynamic>? physical; // Khai báo dạng Map
+  final Map<String, dynamic>? physical;
   final Map<String, dynamic>? vision;
   final Map<String, dynamic>? bloodPressure;
   final Map<String, dynamic>? general;
@@ -36,4 +36,24 @@ class HealthRecord {
     this.general,
     required this.completedStations,
   });
+
+  HealthRecord copyWith({
+    String? studentId,
+    String? campaignId,
+    Map<String, dynamic>? physical,
+    Map<String, dynamic>? vision,
+    Map<String, dynamic>? bloodPressure,
+    Map<String, dynamic>? general,
+    List<String>? completedStations,
+  }) {
+    return HealthRecord(
+      studentId: studentId ?? this.studentId,
+      campaignId: campaignId ?? this.campaignId,
+      physical: physical ?? this.physical,
+      vision: vision ?? this.vision,
+      bloodPressure: bloodPressure ?? this.bloodPressure,
+      general: general ?? this.general,
+      completedStations: completedStations ?? this.completedStations,
+    );
+  }
 }

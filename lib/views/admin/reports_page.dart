@@ -1489,8 +1489,6 @@
 //     );
 //   }
 // }
-
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -1511,7 +1509,9 @@ class ReportsPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final stats = viewModel.bmiStats;
+          final bmiStats = viewModel.bmiStats;
+          // ✨ GỌI BIẾN OVERVIEW STATS ĐỂ LẤY SỐ LIỆU ĐẾM Y KHOA (THỂ TRẠNG, HUYẾT ÁP, THỊ LỰC)
+          final overviewStats = viewModel.overviewStats;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
@@ -1527,16 +1527,22 @@ class ReportsPage extends StatelessWidget {
                 _buildActionToolbar(context, viewModel),
                 const SizedBox(height: 16),
 
-                if (stats == null || stats['total'] == 0)
+                if (bmiStats == null || bmiStats['total'] == 0)
                   _buildEmptyState()
                 else ...[
-                  _buildStatCardsRow(stats),
+                  // ✨ TRUYỀN OVERVIEW STATS VÀO 5 THẺ THỐNG KÊ TRÊN CÙNG
+                  _buildStatCardsRow(overviewStats),
                   const SizedBox(height: 16),
-                  _buildChartsRow(stats),
+
+                  // ✨ TRUYỀN BMI STATS VÀO BIỂU ĐỒ (5 MỐC CHUẨN CHÂU Á)
+                  _buildChartsRow(bmiStats),
                   const SizedBox(height: 16),
+
                   _buildClassCompletionChart(viewModel.classCompletionStats),
                   const SizedBox(height: 16),
-                  _buildDataTable(stats),
+
+                  // ✨ TRUYỀN BMI STATS VÀO BẢNG DỮ LIỆU (5 MỐC CHUẨN CHÂU Á)
+                  _buildDataTable(bmiStats),
                 ]
               ],
             ),
@@ -1687,6 +1693,7 @@ class ReportsPage extends StatelessWidget {
     );
   }
 
+  // ✨ 5 THẺ THỐNG KÊ MỚI
   Widget _buildStatCardsRow(Map<String, dynamic> stats) {
     return GridView.count(
       shrinkWrap: true,
@@ -1696,10 +1703,11 @@ class ReportsPage extends StatelessWidget {
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
       children: [
-        _buildSingleStatCard('👥', 'Hoàn thành (cả 4 trạm)', '${stats['total']}', Colors.blue.shade600, 'Tất cả sinh viên'),
-        _buildSingleStatCard('⚖️', 'BMI Bình thường', '${stats['normal']}', Colors.teal.shade500, 'Sức khỏe tốt'),
-        _buildSingleStatCard('🫀', 'Huyết áp cao', '0', Colors.red.shade500, 'Cần theo dõi'),
-        _buildSingleStatCard('👁️', 'Thị lực kém', '0', Colors.orange.shade500, 'Cần khám lại'),
+        _buildSingleStatCard('👥', 'Hoàn thành (cả 4 trạm)', '${stats['total'] ?? 0}', Colors.blue.shade600, 'Tất cả sinh viên'),
+        _buildSingleStatCard('📉', 'Thể trạng TB / Kém', '${stats['poor_health'] ?? 0}', Colors.brown.shade500, 'Cần chú ý dinh dưỡng'),
+        _buildSingleStatCard('🫀', 'Huyết áp cao', '${stats['high_bp'] ?? 0}', Colors.red.shade500, 'Nguy cơ tim mạch'),
+        _buildSingleStatCard('🩸', 'Huyết áp thấp', '${stats['low_bp'] ?? 0}', Colors.purple.shade400, 'Cần theo dõi sát'),
+        _buildSingleStatCard('👁️', 'Giảm thị lực vừa/nặng', '${stats['poor_vision'] ?? 0}', Colors.orange.shade500, 'Cần khám chuyên khoa'),
       ],
     );
   }
@@ -1730,6 +1738,7 @@ class ReportsPage extends StatelessWidget {
     );
   }
 
+  // ✨ ĐÃ CẬP NHẬT BIỂU ĐỒ 5 MỐC
   Widget _buildChartsRow(Map<String, dynamic> stats) {
     return Column(
       children: [
@@ -1767,7 +1776,7 @@ class ReportsPage extends StatelessWidget {
                           showTitles: true,
                           reservedSize: 36,
                           getTitlesWidget: (double value, TitleMeta meta) {
-                            const titles = ['Thiếu cân', 'Bình thường', 'Thừa cân', 'Béo phì'];
+                            const titles = ['Gầy', 'Bình thường', 'Thừa cân', 'Béo phì 1', 'Béo phì 2'];
                             return Padding(
                               padding: const EdgeInsets.only(top: 8.0),
                               child: Text(titles[value.toInt()], style: TextStyle(color: Colors.grey.shade600, fontSize: 10, fontWeight: FontWeight.w600)),
@@ -1782,10 +1791,11 @@ class ReportsPage extends StatelessWidget {
                     gridData: FlGridData(show: true, drawVerticalLine: false, getDrawingHorizontalLine: (value) => FlLine(color: Colors.grey.shade100, strokeWidth: 1)),
                     borderData: FlBorderData(show: false),
                     barGroups: [
-                      _makeBarData(0, stats['underweight'].toDouble(), Colors.blue.shade400),
-                      _makeBarData(1, stats['normal'].toDouble(), Colors.teal.shade500),
-                      _makeBarData(2, stats['overweight'].toDouble(), Colors.orange.shade400),
-                      _makeBarData(3, stats['obese'].toDouble(), Colors.red.shade400),
+                      _makeBarData(0, stats['underweight'].toDouble(), Colors.blue.shade600),
+                      _makeBarData(1, stats['normal'].toDouble(), Colors.green.shade600),
+                      _makeBarData(2, stats['overweight'].toDouble(), Colors.orange.shade600),
+                      _makeBarData(3, stats['obese_1'].toDouble(), Colors.red.shade600),
+                      _makeBarData(4, stats['obese_2'].toDouble(), Colors.red.shade900),
                     ],
                   ),
                 ),
@@ -1808,10 +1818,11 @@ class ReportsPage extends StatelessWidget {
                     sectionsSpace: 2,
                     centerSpaceRadius: 40,
                     sections: [
-                      if (stats['underweight'] > 0) PieChartSectionData(value: stats['underweight'].toDouble(), color: Colors.blue.shade400, title: '${stats['underweightPercent'].round()}%', radius: 40, titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
-                      if (stats['normal'] > 0) PieChartSectionData(value: stats['normal'].toDouble(), color: Colors.teal.shade500, title: '${stats['normalPercent'].round()}%', radius: 45, titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
-                      if (stats['overweight'] > 0) PieChartSectionData(value: stats['overweight'].toDouble(), color: Colors.orange.shade400, title: '${stats['overweightPercent'].round()}%', radius: 40, titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
-                      if (stats['obese'] > 0) PieChartSectionData(value: stats['obese'].toDouble(), color: Colors.red.shade400, title: '${stats['obesePercent'].round()}%', radius: 40, titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                      if (stats['underweight'] > 0) PieChartSectionData(value: stats['underweight'].toDouble(), color: Colors.blue.shade600, title: '${stats['underweightPercent'].round()}%', radius: 40, titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                      if (stats['normal'] > 0) PieChartSectionData(value: stats['normal'].toDouble(), color: Colors.green.shade600, title: '${stats['normalPercent'].round()}%', radius: 45, titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                      if (stats['overweight'] > 0) PieChartSectionData(value: stats['overweight'].toDouble(), color: Colors.orange.shade600, title: '${stats['overweightPercent'].round()}%', radius: 40, titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                      if (stats['obese_1'] > 0) PieChartSectionData(value: stats['obese_1'].toDouble(), color: Colors.red.shade600, title: '${stats['obese1Percent'].round()}%', radius: 40, titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                      if (stats['obese_2'] > 0) PieChartSectionData(value: stats['obese_2'].toDouble(), color: Colors.red.shade900, title: '${stats['obese2Percent'].round()}%', radius: 40, titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
                     ],
                   ),
                 ),
@@ -1930,19 +1941,21 @@ class ReportsPage extends StatelessWidget {
     );
   }
 
+  // ✨ ĐÃ CẬP NHẬT BẢNG DATA 5 MỐC
   Widget _buildDataTable(Map<String, dynamic> stats) {
     final rows = [
-      {'l': 'Thiếu cân', 'v': stats['underweight'], 'p': stats['underweightPercent'], 'c': Colors.blue.shade400},
-      {'l': 'Bình thường', 'v': stats['normal'], 'p': stats['normalPercent'], 'c': Colors.teal.shade500},
-      {'l': 'Thừa cân', 'v': stats['overweight'], 'p': stats['overweightPercent'], 'c': Colors.orange.shade400},
-      {'l': 'Béo phì', 'v': stats['obese'], 'p': stats['obesePercent'], 'c': Colors.red.shade400},
+      {'l': 'Gầy (Thiếu cân)', 'v': stats['underweight'], 'p': stats['underweightPercent'], 'c': Colors.blue.shade600},
+      {'l': 'Bình thường', 'v': stats['normal'], 'p': stats['normalPercent'], 'c': Colors.green.shade600},
+      {'l': 'Thừa cân (Tiền béo phì)', 'v': stats['overweight'], 'p': stats['overweightPercent'], 'c': Colors.orange.shade600},
+      {'l': 'Béo phì độ 1', 'v': stats['obese_1'], 'p': stats['obese1Percent'], 'c': Colors.red.shade600},
+      {'l': 'Béo phì độ 2', 'v': stats['obese_2'], 'p': stats['obese2Percent'], 'c': Colors.red.shade900},
     ];
 
     return _buildCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Bảng tổng hợp BMI', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87)),
+          const Text('Bảng tổng hợp phân loại BMI', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87)),
           const SizedBox(height: 12),
 
           Container(
@@ -1950,7 +1963,7 @@ class ReportsPage extends StatelessWidget {
             decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.shade300))),
             child: Row(
               children: [
-                Expanded(flex: 3, child: Text('Phân loại', style: TextStyle(color: Colors.grey.shade600, fontSize: 11, fontWeight: FontWeight.bold))),
+                Expanded(flex: 4, child: Text('Phân loại', style: TextStyle(color: Colors.grey.shade600, fontSize: 11, fontWeight: FontWeight.bold))),
                 Expanded(flex: 2, child: Text('Số lượng', style: TextStyle(color: Colors.grey.shade600, fontSize: 11, fontWeight: FontWeight.bold))),
                 Expanded(flex: 2, child: Text('Tỷ lệ', style: TextStyle(color: Colors.grey.shade600, fontSize: 11, fontWeight: FontWeight.bold))),
                 Expanded(flex: 1, child: Text('Mức độ', style: TextStyle(color: Colors.grey.shade600, fontSize: 11, fontWeight: FontWeight.bold), textAlign: TextAlign.right)),
@@ -1964,12 +1977,11 @@ class ReportsPage extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                    flex: 3,
+                    flex: 4,
                     child: Row(
                       children: [
                         Container(width: 10, height: 10, decoration: BoxDecoration(color: r['c'] as Color, borderRadius: BorderRadius.circular(2))),
                         const SizedBox(width: 8),
-                        // ✨ ĐÃ SỬA: Bọc Expanded cho tên phân loại để tránh tràn 0.3 pixel
                         Expanded(child: Text('${r['l']}', style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
                       ],
                     )

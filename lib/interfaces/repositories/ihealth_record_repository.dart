@@ -1,6 +1,3 @@
-// lib/interfaces/repositories/ihealth_record_repository.dart
-
-
 import '../../domain/entities/health_record.dart';
 
 abstract class IHealthRecordRepository {

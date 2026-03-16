@@ -297,17 +297,23 @@
 //   );
 // }
 
+import 'dart:ui' as ui;
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:mailer/mailer.dart';        // ✨ IMPORT THƯ VIỆN MAILER
-import 'package:mailer/smtp_server.dart';   // ✨ IMPORT SMTP
+import 'package:path_provider/path_provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';    // ✨ Dùng chính thư viện QR của bạn
+import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server.dart';
 import '../../../domain/entities/student.dart';
 
+// ✨ ĐÃ XÓA MẪU "Lịch khám kèm mã QR" theo yêu cầu
 final List<Map<String, String>> emailTemplates = [
   {
     'id': 'reminder',
     'name': 'Nhắc nhở khám sức khỏe',
     'subject': 'Thông báo: Nhắc nhở tham gia khám sức khỏe',
-    'content': 'Kính gửi sinh viên [Tên],\n\nNhà trường xin nhắc nhở bạn tham gia chương trình khám sức khỏe định kỳ.\n\nThông tin chi tiết:\n- Mã sinh viên: [Mã SV]\n- Thời gian: 08:00 - 11:30, Ngày mai\n- Địa điểm: Phòng Y tế Trường\n\nVui lòng mang theo Thẻ sinh viên và mã QR để check-in.\n\nTrân trọng,\nPhòng Y tế'
+    'content': 'Kính gửi sinh viên [Tên],\n\nNhà trường xin nhắc nhở bạn tham gia chương trình khám sức khỏe định kỳ.\n\nThông tin chi tiết:\n- Mã sinh viên: [Mã SV]\n- Thời gian: 08:00 - 11:30, Ngày mai\n- Địa điểm: Phòng Y tế Trường\n\nVui lòng mang theo Thẻ sinh viên và xuất trình mã QR bên dưới để check-in khi đến trạm.\n\nTrân trọng,\nPhòng Y tế'
   },
   {
     'id': 'completion',
@@ -332,7 +338,7 @@ class _BulkEmailDialogState extends State<BulkEmailDialog> {
   String _selectedTemplateId = 'reminder';
   String _subject = '';
   String _content = '';
-  bool _includeQR = false;
+  bool _includeQR = true; // ✨ Mặc định cho phép đính kèm QR luôn
   bool _isPreviewMode = false;
 
   bool _isSending = false;
@@ -367,41 +373,93 @@ class _BulkEmailDialogState extends State<BulkEmailDialog> {
     }
   }
 
-  // ✨ HÀM GỬI EMAIL THẬT SỰ BẰNG GMAIL SMTP
+  // ✨ HÀM VẼ ẢNH QR TRỰC TIẾP TỪ THƯ VIỆN BÊN TRONG APP (Giống file qr_code_generator)
+  Future<File?> _generateQrFile(String qrDataStr, String studentCode) async {
+    try {
+      final qrValidationResult = QrValidator.validate(
+        data: qrDataStr,
+        version: QrVersions.auto,
+        errorCorrectionLevel: QrErrorCorrectLevel.L,
+      );
+      if (qrValidationResult.status == QrValidationStatus.valid) {
+        final qrCode = qrValidationResult.qrCode!;
+        final painter = QrPainter.withQr(
+          qr: qrCode,
+          color: const Color(0xFF000000),
+          emptyColor: const Color(0xFFFFFFFF),
+          gapless: true,
+        );
+        // Chuyển mã QR thành dữ liệu ảnh PNG (kích thước 250x250)
+        final picData = await painter.toImageData(250, format: ui.ImageByteFormat.png);
+        final bytes = picData!.buffer.asUint8List();
+
+        // Lưu tạm vào bộ nhớ thiết bị để đính kèm vào Mail
+        final tempDir = await getTemporaryDirectory();
+        final file = File('${tempDir.path}/qr_$studentCode.png');
+        await file.writeAsBytes(bytes);
+        return file;
+      }
+    } catch (e) {
+      debugPrint('Lỗi tạo file ảnh QR: $e');
+    }
+    return null;
+  }
+
   Future<void> _sendRealEmails(List<Student> recipients) async {
     setState(() => _isSending = true);
 
     try {
       // ⚠️ ĐIỀN THÔNG TIN GMAIL CỦA BẠN VÀO ĐÂY:
       String username = 'kietleedinh@gmail.com';
-      String password = 'oirvjsrwtdoksmtu'; // Mã 16 ký tự, viết liền không dấu cách
+      String password = 'oirvjsrwtdoksmtu';
 
-      if (username.contains('dien_email')) {
-        throw Exception('Bạn chưa cấu hình email gửi đi trong code!');
-      }
-
-      // Cấu hình máy chủ SMTP của Google
       final smtpServer = gmail(username, password);
-
       int successCount = 0;
 
-      // Chạy vòng lặp để gửi email cho từng người
       for (var student in recipients) {
-        if (student.email.isEmpty || !student.email.contains('@')) continue; // Bỏ qua nếu SV không có email
+        if (student.email.isEmpty || !student.email.contains('@')) continue;
 
-        // ✨ TỰ ĐỘNG THAY THẾ [Tên] VÀ [Mã SV] THÀNH THÔNG TIN THẬT
-        String personalizedContent = _content
+        String personalizedText = _content
             .replaceAll('[Tên]', student.name)
             .replaceAll('[Mã SV]', student.studentCode);
 
-        // Tạo gói tin Email
+        String htmlContent = personalizedText.replaceAll('\n', '<br>');
         final message = Message()
           ..from = Address(username, 'Phòng Y tế - Health Check')
-          ..recipients.add(student.email) // Gửi tới email của Sinh viên
-          ..subject = _subject
-          ..text = personalizedContent;
+          ..recipients.add(student.email)
+          ..subject = _subject;
 
-        // Bắn email đi
+        // ✨ NẾU CHỌN NHẮC NHỞ & ĐÍNH KÈM QR
+        if (_selectedTemplateId == 'reminder' && _includeQR) {
+          final qrData = jsonEncode({
+            'studentCode': student.studentCode,
+            'campaignId': student.campaignId,
+          });
+
+          // Tạo ra file ảnh vật lý từ nội dung JSON
+          final qrFile = await _generateQrFile(qrData, student.studentCode);
+
+          if (qrFile != null) {
+            // Nhúng file ảnh trực tiếp vào Email (Content-ID inline)
+            final attachment = FileAttachment(qrFile)
+              ..location = Location.inline
+              ..cid = '<qrcode_${student.studentCode}>'; // Đặt ID riêng cho ảnh
+
+            message.attachments.add(attachment);
+
+            htmlContent += '''
+              <br><br>
+              <div style="padding: 16px; background-color: #f8f9fa; border-radius: 12px; display: inline-block;">
+                <p style="margin-top: 0; font-weight: bold; color: #333;">Mã QR Check-in của bạn:</p>
+                <img src="cid:qrcode_${student.studentCode}" alt="Mã QR cá nhân" width="200" height="200" style="border: 2px solid #e9ecef; border-radius: 8px;" />
+              </div>
+            ''';
+          }
+        }
+
+        message.html = htmlContent;
+        message.text = personalizedText;
+
         await send(message, smtpServer);
         successCount++;
       }
@@ -409,7 +467,7 @@ class _BulkEmailDialogState extends State<BulkEmailDialog> {
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Đã gửi thành công $successCount email thực tế!'), backgroundColor: Colors.green)
+            SnackBar(content: Text('Đã gửi thành công $successCount email thực tế kèm QR!'), backgroundColor: Colors.green)
         );
       }
     } on MailerException catch (e) {
@@ -478,7 +536,6 @@ class _BulkEmailDialogState extends State<BulkEmailDialog> {
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton.icon(
-                    // ✨ GỌI HÀM GỬI EMAIL THẬT
                     onPressed: _isSending ? null : () => _sendRealEmails(recipients),
                     icon: _isSending
                         ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
@@ -560,6 +617,24 @@ class _BulkEmailDialogState extends State<BulkEmailDialog> {
           onChanged: (val) => _applyTemplate(val!),
         ),
 
+        // ✨ CHỈ HIỂN THỊ DÒNG ĐÍNH KÈM KHI CHỌN "Nhắc nhở khám sức khỏe"
+        if (_selectedTemplateId == 'reminder') ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade200)),
+            child: CheckboxListTile(
+              title: const Text('Đính kèm mã QR cá nhân', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              subtitle: const Text('Mã QR sẽ tự động tạo và hiển thị trực tiếp trong thư để sinh viên quét', style: TextStyle(fontSize: 12)),
+              value: _includeQR,
+              onChanged: (val) => setState(() => _includeQR = val!),
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
+              activeColor: Colors.blue.shade600,
+            ),
+          ),
+        ],
+
         const SizedBox(height: 24),
         _buildLabel('Tiêu đề *'),
         TextField(controller: _subjectController, decoration: _inputDecoration(hint: 'Nhập tiêu đề email...'), onChanged: (val) => _subject = val),
@@ -612,7 +687,12 @@ class _BulkEmailDialogState extends State<BulkEmailDialog> {
         Container(width: double.infinity, padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade200)), child: Text(_subject, style: const TextStyle(fontWeight: FontWeight.bold))),
         const SizedBox(height: 16),
         _buildLabel('Nội dung'),
-        Container(width: double.infinity, padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade200)), child: Text(_content, style: const TextStyle(fontFamily: 'monospace', fontSize: 13))),
+        Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade200)),
+            child: Text(_content + ((_selectedTemplateId == 'reminder' && _includeQR) ? '\n\n[Hình ảnh QR Code cá nhân sẽ hiển thị ở đây]' : ''), style: const TextStyle(fontFamily: 'monospace', fontSize: 13))
+        ),
         const SizedBox(height: 24),
         Container(
           padding: const EdgeInsets.all(12),
@@ -621,7 +701,7 @@ class _BulkEmailDialogState extends State<BulkEmailDialog> {
             children: [
               Icon(Icons.warning_amber_rounded, color: Colors.red.shade600),
               const SizedBox(width: 8),
-              Expanded(child: Text('Ứng dụng sẽ tự động gửi email thực sự tới hòm thư của ${recipients.length} sinh viên trên.', style: TextStyle(color: Colors.red.shade800, fontSize: 13, fontWeight: FontWeight.bold))),
+              Expanded(child: Text('Ứng dụng sẽ tự động vẽ mã QR cá nhân và đính kèm vào hòm thư của ${recipients.length} sinh viên trên.', style: TextStyle(color: Colors.red.shade800, fontSize: 13, fontWeight: FontWeight.bold))),
             ],
           ),
         ),

@@ -44,19 +44,35 @@ class _PhysicalFormWidgetState extends State<PhysicalFormWidget> {
     return null;
   }
 
+  // ✨ Áp dụng chuẩn phân loại BMI cho người Châu Á (IDI & WPRO)
   String _getBMICategory(double bmi) {
     if (bmi < 18.5) return 'underweight';
-    if (bmi < 25) return 'normal';
-    if (bmi < 30) return 'overweight';
-    return 'obese';
+    if (bmi < 23.0) return 'normal';
+    if (bmi < 25.0) return 'overweight';
+    if (bmi < 30.0) return 'obese_1';
+    return 'obese_2';
   }
 
   String _getBMILabel(String category) {
     switch (category) {
-      case 'underweight': return 'Gầy';
-      case 'overweight': return 'Thừa cân';
-      case 'obese': return 'Béo phì';
-      default: return 'Bình thường';
+      case 'underweight': return 'Gầy (Thiếu cân)';
+      case 'normal': return 'Bình thường';
+      case 'overweight': return 'Thừa cân (Tiền béo phì)';
+      case 'obese_1': return 'Béo phì độ 1';
+      case 'obese_2': return 'Béo phì độ 2';
+      default: return 'Chưa xác định';
+    }
+  }
+
+  // ✨ Gắn màu sắc cảnh báo theo từng mức độ
+  Color _getBMIColor(String category) {
+    switch (category) {
+      case 'underweight': return Colors.blue.shade600;
+      case 'normal': return Colors.green.shade600;
+      case 'overweight': return Colors.orange.shade600;
+      case 'obese_1': return Colors.red.shade600;
+      case 'obese_2': return Colors.red.shade900;
+      default: return Colors.grey;
     }
   }
 
@@ -69,6 +85,7 @@ class _PhysicalFormWidgetState extends State<PhysicalFormWidget> {
       'weight': double.tryParse(_weightCtrl.text),
       'bmi': bmi,
       'bmiCategory': bmi != null ? _getBMICategory(bmi) : null,
+      'categoryLabel': bmi != null ? _getBMILabel(_getBMICategory(bmi)) : null, // Lưu thêm nhãn tiếng Việt
     };
 
     List<String> stations = List.from(widget.record.completedStations);
@@ -103,31 +120,105 @@ class _PhysicalFormWidgetState extends State<PhysicalFormWidget> {
       formContent: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          StationUIHelpers.buildTextField('Chiều cao (cm) *', 'VD: 170', _heightCtrl, isNumber: true),
-          const SizedBox(height: 16),
-          StationUIHelpers.buildTextField('Cân nặng (kg) *', 'VD: 65', _weightCtrl, isNumber: true),
-          const SizedBox(height: 16),
-          if (bmi != null)
+          Row(
+            children: [
+              Expanded(child: StationUIHelpers.buildTextField('Chiều cao (cm)', 'VD: 170', _heightCtrl, isNumber: true)),
+              const SizedBox(width: 16),
+              Expanded(child: StationUIHelpers.buildTextField('Cân nặng (kg)', 'VD: 65', _weightCtrl, isNumber: true)),
+            ],
+          ),
+
+          if (bmi != null) ...[
+            const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(
+                color: _getBMIColor(_getBMICategory(bmi)).withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _getBMIColor(_getBMICategory(bmi)).withOpacity(0.3)),
+              ),
               child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [const Text('BMI:', style: TextStyle(fontWeight: FontWeight.w600)), Text(bmi.toStringAsFixed(1), style: const TextStyle(fontWeight: FontWeight.bold))],
+                    children: [
+                      Text('Chỉ số BMI:', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
+                      Text(bmi.toStringAsFixed(1), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: _getBMIColor(_getBMICategory(bmi))))
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Phân loại:', style: TextStyle(fontWeight: FontWeight.w600)),
-                      Text(_getBMILabel(_getBMICategory(bmi)), style: TextStyle(fontWeight: FontWeight.bold, color: _getBMICategory(bmi) == 'normal' ? Colors.green.shade700 : Colors.orange.shade700)),
+                      Text('Đánh giá:', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
+                      Text(
+                          _getBMILabel(_getBMICategory(bmi)),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: _getBMIColor(_getBMICategory(bmi)))
+                      ),
                     ],
                   ),
                 ],
               ),
             )
+          ],
+
+          const SizedBox(height: 32),
+          const Divider(),
+          const SizedBox(height: 16),
+
+          // ✨ Bảng chú giải tham khảo chuẩn Châu Á
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.info_outline_rounded, color: Colors.blue.shade600, size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(child: Text('Phân loại BMI cho người Châu Á (IDI & WPRO):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14))),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _buildReferenceRow('Dưới 18.5:', 'Gầy (Thiếu cân).', Colors.blue.shade600),
+                _buildReferenceRow('18.5 - 22.9:', 'Bình thường.', Colors.green.shade600),
+                _buildReferenceRow('23.0 - 24.9:', 'Thừa cân (Tiền béo phì).', Colors.orange.shade600),
+                _buildReferenceRow('25.0 - 29.9:', 'Béo phì độ 1.', Colors.red.shade600),
+                _buildReferenceRow('Trên 30.0:', 'Béo phì độ 2.', Colors.red.shade900),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReferenceRow(String title, String desc, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 6.0, right: 8.0),
+            child: Icon(Icons.circle, size: 6, color: color),
+          ),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: const TextStyle(fontSize: 13, color: Colors.black87, height: 1.4),
+                children: [
+                  TextSpan(text: '$title ', style: TextStyle(fontWeight: FontWeight.bold, color: color)),
+                  TextSpan(text: desc),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
