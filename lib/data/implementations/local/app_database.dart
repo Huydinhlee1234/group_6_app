@@ -18,13 +18,12 @@ class AppDatabase {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'health_check.db');
 
-    // ✨ BƯỚC 1: MỞ KHÓA DÒNG NÀY ĐỂ RESET DATABASE (Xóa DB cũ đi để nạp data mới)
-    // Lưu ý: Sau khi chạy app lên thấy đúng rồi, bạn có thể comment dòng này lại.
-    //await deleteDatabase(path);
+    // ✨ MỞ KHÓA DÒNG NÀY ĐỂ TẠO LẠI DB CÓ CỘT EMAIL
+    await deleteDatabase(path);
 
     return openDatabase(
       path,
-      version: 3,
+      version: 4, // Tăng version
       onCreate: (Database db, int version) async {
         await db.execute('''
           CREATE TABLE users(
@@ -45,6 +44,7 @@ class AppDatabase {
           ); 
         ''');
 
+        // ✨ ĐÃ THÊM CỘT email
         await db.execute('''
           CREATE TABLE students(
             id TEXT PRIMARY KEY,
@@ -52,6 +52,7 @@ class AppDatabase {
             student_code TEXT NOT NULL,
             name TEXT NOT NULL,
             class_name TEXT NOT NULL,
+            email TEXT NOT NULL, 
             status TEXT NOT NULL,
             UNIQUE(campaign_id, student_code)
           ); 
@@ -108,15 +109,14 @@ class AppDatabase {
           'id': '2', 'name': 'Khám sức khỏe cuối khóa', 'start_date': '01-05-2026', 'end_date': '15-05-2026', 'location': 'Trạm y tế khu B', 'status': 'upcoming'
         });
 
-        // 2 SINH VIÊN MẪU
+        // ✨ THÊM EMAIL CHO DỮ LIỆU MẪU
         await db.insert('students', {
-          'id': '1', 'campaign_id': '1', 'student_code': 'SV001', 'name': 'Nguyễn Văn An', 'class_name': 'CNTT-K64', 'status': 'completed'
+          'id': '1', 'campaign_id': '1', 'student_code': 'SV001', 'name': 'Nguyễn Văn An', 'class_name': 'CNTT-K64', 'email': 'kietleedinh@gmail.com', 'status': 'completed'
         });
         await db.insert('students', {
-          'id': '2', 'campaign_id': '1', 'student_code': 'SV002', 'name': 'Trần Thị Bình', 'class_name': 'CNTT-K64', 'status': 'in_progress'
+          'id': '2', 'campaign_id': '1', 'student_code': 'SV002', 'name': 'Trần Thị Bình', 'class_name': 'CNTT-K64', 'email': 'kietleedinh@gmail.com', 'status': 'in_progress'
         });
 
-        // HỒ SƠ CỦA SINH VIÊN 1 (Khám đủ 4 trạm)
         await db.insert('health_records', {
           'student_id': '1', 'campaign_id': '1',
           'physical': jsonEncode({'height': 170, 'weight': 65, 'bmi': 22.5, 'bmiCategory': 'normal'}),
@@ -126,14 +126,13 @@ class AppDatabase {
           'completed_stations': jsonEncode(['physical', 'vision', 'blood_pressure', 'general'])
         });
 
-        // ✨ BƯỚC 2: THÊM HỒ SƠ CHO SINH VIÊN 2 (Mới khám 2 trạm Thể lực và Thị lực)
         await db.insert('health_records', {
           'student_id': '2', 'campaign_id': '1',
           'physical': jsonEncode({'height': 160, 'weight': 50, 'bmi': 19.5, 'bmiCategory': 'normal'}),
           'vision': jsonEncode({'leftEye': '9/10', 'rightEye': '9/10'}),
-          'blood_pressure': null, // Chưa khám
-          'general': null,        // Chưa khám
-          'completed_stations': jsonEncode(['physical', 'vision']) // Mới hoàn thành 2 trạm này
+          'blood_pressure': null,
+          'general': null,
+          'completed_stations': jsonEncode(['physical', 'vision'])
         });
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {},

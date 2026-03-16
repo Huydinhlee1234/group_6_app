@@ -84,6 +84,7 @@ class HealthStaffDashboardViewModel extends ChangeNotifier {
               studentCode: student.studentCode,
               name: student.name,
               className: student.className,
+              email: student.email,
               status: 'completed' // Đã khám xong
           ));
           _students = await _studentRepo.getAllStudents(); // Cập nhật lại list

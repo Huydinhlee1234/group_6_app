@@ -1,11 +1,12 @@
-// lib/interfaces/api/istudent_api.dart
-import '../../domain/entities/student.dart';
+import '../../data/dtos/student/student_dto.dart';
+import '../../data/dtos/student/update_insert_student_request_dto.dart';
 
 abstract class IStudentApi {
-  Future<List<Student>> getAllStudents();
-  Future<Student> createStudent(Student student);
-  Future<Student> updateStudent(Student student);
-  Future<void> deleteStudent(String id);
-  Future<void> importStudents(List<Student> students);
-}
+  Future<List<StudentDto>> getAllStudents();
+  Future<bool> createStudent(UpdateInsertStudentRequestDto request); // Đổi tên cho giống code bạn muốn
+  Future<bool> updateStudent(UpdateInsertStudentRequestDto request);
+  Future<bool> deleteStudent(String id);
 
+  // ✨ THÊM HÀM IMPORT NHẬN LIST DTO
+  Future<bool> importStudents(List<UpdateInsertStudentRequestDto> requests);
+}

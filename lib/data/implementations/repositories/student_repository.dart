@@ -1,6 +1,7 @@
 import '../../../domain/entities/student.dart';
 import '../../../interfaces/api/istudent_api.dart';
 import '../../../interfaces/repositories/istudent_repository.dart';
+import '../mapper/student_mapper.dart';
 
 class StudentRepository implements IStudentRepository {
   final IStudentApi _api;
@@ -8,17 +9,30 @@ class StudentRepository implements IStudentRepository {
   StudentRepository(this._api);
 
   @override
-  Future<List<Student>> getAllStudents() => _api.getAllStudents();
+  Future<List<Student>> getAllStudents() async {
+    final dtos = await _api.getAllStudents();
+    return dtos.map((dto) => StudentMapper.toEntity(dto)).toList();
+  }
 
   @override
-  Future<Student> createStudent(Student student) => _api.createStudent(student);
+  Future<bool> createStudent(Student student) {
+    return _api.createStudent(StudentMapper.toInsertRequest(student));
+  }
 
   @override
-  Future<Student> updateStudent(Student student) => _api.updateStudent(student);
+  Future<bool> updateStudent(Student student) {
+    return _api.updateStudent(StudentMapper.toInsertRequest(student));
+  }
 
   @override
-  Future<void> deleteStudent(String id) => _api.deleteStudent(id);
+  Future<bool> deleteStudent(String id) {
+    return _api.deleteStudent(id);
+  }
 
+  // ✨ NHẬN LIST ENTITY TỪ VIEWMODEL -> ĐỔI SANG LIST DTO -> TRUYỀN XUỐNG API
   @override
-  Future<void> importStudents(List<Student> students) => _api.importStudents(students);
+  Future<bool> importStudents(List<Student> students) {
+    final requests = students.map((s) => StudentMapper.toInsertRequest(s)).toList();
+    return _api.importStudents(requests);
+  }
 }

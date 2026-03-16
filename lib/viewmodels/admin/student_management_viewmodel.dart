@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart'; // ✨ ĐÃ THÊM: Import thư viện Uuid
+import 'package:uuid/uuid.dart';
 import '../../domain/entities/campaign.dart';
 import '../../domain/entities/student.dart';
+import '../../domain/entities/health_record.dart'; // ✨ THÊM: Để lấy số liệu khám thực tế
 import '../../interfaces/repositories/istudent_repository.dart';
 import '../../interfaces/repositories/ihealth_record_repository.dart';
 import '../../interfaces/repositories/icampaign_repository.dart';
@@ -11,9 +12,9 @@ class StudentManagementViewModel extends ChangeNotifier {
   final IHealthRecordRepository _recordRepo;
   final ICampaignRepository _campaignRepo;
 
-  List<Student> _students = [];
+  List<Student> _allStudents = [];
   List<Campaign> _campaigns = [];
-  Map<String, int> _completedStationsMap = {};
+  List<HealthRecord> _healthRecords = []; // ✨ Thay thế Map giả bằng dữ liệu thật
 
   bool _isLoading = false;
   String _error = '';
@@ -36,6 +37,10 @@ class StudentManagementViewModel extends ChangeNotifier {
   String get error => _error;
   List<Campaign> get campaigns => _campaigns;
 
+  List<String> get availableClasses {
+    return _allStudents.map((s) => s.className.trim()).toSet().toList()..sort();
+  }
+
   String get tempClassFilter {
     if (_tempClassFilter != 'all' && !availableClasses.contains(_tempClassFilter)) return 'all';
     return _tempClassFilter;
@@ -46,19 +51,14 @@ class StudentManagementViewModel extends ChangeNotifier {
     return _tempCampaignFilter;
   }
 
-  List<String> get availableClasses {
-    return _students.map((s) => s.className.trim()).toSet().toList()..sort();
-  }
-
-  // ✨ ĐÃ SỬA: Lọc danh sách sinh viên TRỰC TIẾP bằng s.campaignId
+  // ✨ Lọc danh sách sinh viên: TÌM KIẾM ĐƯỢC CẢ EMAIL
   List<Student> get filteredStudents {
-    return _students.where((s) {
+    return _allStudents.where((s) {
       final matchSearch = s.name.toLowerCase().contains(_searchTerm.toLowerCase()) ||
-          s.studentCode.toLowerCase().contains(_searchTerm.toLowerCase());
+          s.studentCode.toLowerCase().contains(_searchTerm.toLowerCase()) ||
+          s.email.toLowerCase().contains(_searchTerm.toLowerCase()); // Bổ sung tìm bằng email
 
       final matchClass = _appliedClassFilter == 'all' || s.className.trim() == _appliedClassFilter;
-
-      // Kiểm tra trực tiếp ID chiến dịch của sinh viên
       final matchCampaign = _appliedCampaignFilter == 'all' || s.campaignId == _appliedCampaignFilter;
 
       return matchSearch && matchClass && matchCampaign;
@@ -72,11 +72,21 @@ class StudentManagementViewModel extends ChangeNotifier {
   int get notStartedStudents => filteredStudents.where((s) => s.status == 'not_started' || s.status == 'pending').length;
   int get completionRate => totalStudents > 0 ? ((completedStudents / totalStudents) * 100).round() : 0;
 
-  int getCompletedStationsCount(String studentId) => _completedStationsMap[studentId] ?? 0;
+  // ✨ ĐẾM SỐ TRẠM ĐÃ KHÁM THẬT (Từ bảng Health Records thay vì dùng Map ảo)
+  int getCompletedStationsCount(String studentId) {
+    try {
+      final record = _healthRecords.firstWhere((r) => r.studentId == studentId);
+      return record.completedStations.length;
+    } catch (_) {
+      return 0;
+    }
+  }
 
   // --- SETTERS CHO UI ---
   void setSearchTerm(String term) {
     _searchTerm = term;
+    // Nếu bạn muốn gõ chữ tới đâu list filter tới đó thì gọi applyFiltersInternal ở đây.
+    // Hiện tại đang chờ bấm nút "Lọc" mới chạy.
     notifyListeners();
   }
 
@@ -90,12 +100,10 @@ class StudentManagementViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ✨ ĐÃ SỬA: Hàm lọc trở nên siêu nhẹ, không cần query DB nữa
+  // Hàm áp dụng Lọc
   Future<void> applyFilters() async {
     _appliedClassFilter = _tempClassFilter;
     _appliedCampaignFilter = _tempCampaignFilter;
-
-    // Chỉ cần báo UI cập nhật lại danh sách là xong
     notifyListeners();
   }
 
@@ -106,15 +114,13 @@ class StudentManagementViewModel extends ChangeNotifier {
       final results = await Future.wait([
         _studentRepo.getAllStudents(),
         _campaignRepo.getAllCampaigns(),
+        _recordRepo.getAllRecords(), // ✨ Tải hồ sơ khám sức khỏe thật
       ]);
-      _students = results[0] as List<Student>;
-      _campaigns = results[1] as List<Campaign>;
 
-      for (var s in _students) {
-        if (s.status == 'completed') _completedStationsMap[s.id] = 4;
-        else if (s.status == 'in_progress') _completedStationsMap[s.id] = 2;
-        else _completedStationsMap[s.id] = 0;
-      }
+      _allStudents = results[0] as List<Student>;
+      _campaigns = results[1] as List<Campaign>;
+      _healthRecords = results[2] as List<HealthRecord>;
+
     } catch (e) {
       _error = 'Lỗi tải danh sách: $e';
     } finally {
@@ -135,8 +141,13 @@ class StudentManagementViewModel extends ChangeNotifier {
 
   Future<bool> updateStudent(Student student) async {
     _isLoading = true; notifyListeners();
-    try { await _studentRepo.updateStudent(student); await loadData(); return true; }
-    catch (e) { _error = e.toString(); return false; }
+    try {
+      await _studentRepo.updateStudent(student);
+      await loadData();
+      return true;
+    } catch (e) {
+      _error = e.toString(); return false;
+    }
   }
 
   Future<bool> deleteStudent(String id) async {
@@ -150,41 +161,31 @@ class StudentManagementViewModel extends ChangeNotifier {
     }
   }
 
-  // --- THÊM HÀM MỚI NÀY VÀO CUỐI CLASS ---
-
-  /// Hàm nhận dữ liệu từ hộp thoại Import Excel và đẩy vào Database
-  Future<bool> importStudents(List<Map<String, dynamic>> importedData) async {
-    // 1. Kiểm tra xem người dùng đã chọn chiến dịch để import vào chưa
-    // Mặc định nếu đang chọn 'all' thì không cho import vì không biết nhét vào đâu
-    if (_appliedCampaignFilter == 'all' || _appliedCampaignFilter.isEmpty) {
-      _error = 'Vui lòng chọn cụ thể một Chiến dịch ở bộ lọc trước khi Import!';
-      notifyListeners();
-      return false;
-    }
-
+  // --- IMPORT HÀNG LOẠT ---
+  // ✨ CẬP NHẬT: Nhận targetCampaignId từ UI và lưu Email vào Database
+  Future<bool> importStudents(String targetCampaignId, List<Map<String, dynamic>> importedData) async {
     _isLoading = true;
     notifyListeners();
 
     try {
       List<Student> studentsToImport = [];
 
-      // 2. Chuyển đổi Map thành Entity Student
       for (var data in importedData) {
         final newStudent = Student(
-          id: const Uuid().v4(), // ✨ ĐÃ SỬA: Xóa chữ const ở đây
-          campaignId: _appliedCampaignFilter, // Nhét vào chiến dịch đang được lọc
-          studentCode: data['studentCode'],
-          name: data['name'],
-          className: data['className'],
-          status: 'not_started', // Mặc định sinh viên mới là chưa khám
+          id: const Uuid().v4(),
+          campaignId: targetCampaignId, // Sử dụng ID chiến dịch do người dùng chọn trong Dialog
+          studentCode: data['studentCode'] ?? '',
+          name: data['name'] ?? '',
+          className: data['className'] ?? '',
+          email: data['email'] ?? '', // ✨ Lưu địa chỉ Email
+          status: 'not_started',
         );
         studentsToImport.add(newStudent);
       }
 
-      // 3. Gọi Repository để lưu hàng loạt (Batch Insert)
+      // ✨ GỌI HÀM BATCH INSERT TỐI ƯU CỦA REPOSITORY
       await _studentRepo.importStudents(studentsToImport);
 
-      // 4. Tải lại dữ liệu mới nhất từ DB lên màn hình
       await loadData();
       return true;
 

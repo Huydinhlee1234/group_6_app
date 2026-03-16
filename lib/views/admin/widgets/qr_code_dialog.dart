@@ -12,7 +12,7 @@ void showQRCodeDialog(BuildContext context, Student student, {String? campaignNa
         child: Container(
           width: 400, // max-w-md tương đương 400px
           padding: const EdgeInsets.all(24.0),
-          // ✨ FIX LỖI PIXEL: Bọc SingleChildScrollView để cho phép cuộn trên màn hình nhỏ
+          // Bọc SingleChildScrollView để cho phép cuộn trên màn hình nhỏ
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -32,7 +32,7 @@ void showQRCodeDialog(BuildContext context, Student student, {String? campaignNa
 
                 const SizedBox(height: 24),
 
-                // ✨ SỬ DỤNG COMPONENT CHUẨN ĐÃ TẠO
+                // SỬ DỤNG COMPONENT CHUẨN ĐÃ TẠO
                 QRCodeGenerator(
                   student: student,
                   campaignId: campaignId ?? 'default',
@@ -42,7 +42,7 @@ void showQRCodeDialog(BuildContext context, Student student, {String? campaignNa
 
                 const SizedBox(height: 24),
 
-                // Student Info Box (Giống bg-slate-50)
+                // Student Info Box
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
@@ -61,6 +61,11 @@ void showQRCodeDialog(BuildContext context, Student student, {String? campaignNa
                       Text('• Họ tên: ${student.name}', style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
                       const SizedBox(height: 4),
                       Text('• Lớp: ${student.className}', style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
+
+                      // ✨ ĐÃ BỔ SUNG: Hiển thị Email của sinh viên
+                      const SizedBox(height: 4),
+                      Text('• Email: ${student.email}', style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
+
                       if (campaignName != null) ...[
                         const SizedBox(height: 4),
                         Text('• Chiến dịch: $campaignName', style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),

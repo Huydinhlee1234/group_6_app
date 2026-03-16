@@ -1,32 +1,29 @@
 import '../../../domain/entities/student.dart';
-import '../../../interfaces/mapper/imapper.dart';
 import '../../dtos/student/student_dto.dart';
 import '../../dtos/student/update_insert_student_request_dto.dart';
 
-class StudentFromDtoMapper implements IMapper<StudentDto, Student> {
-  @override
-  Student map(StudentDto input) {
+class StudentMapper {
+  static Student toEntity(StudentDto dto) {
     return Student(
-      id: input.id,
-      campaignId: input.campaignId, // ✨ Đã thêm thuộc tính này
-      studentCode: input.studentCode,
-      name: input.name,
-      className: input.className,
-      status: input.status,
+      id: dto.id,
+      campaignId: dto.campaignId,
+      studentCode: dto.studentCode,
+      name: dto.name,
+      className: dto.className,
+      email: dto.email, // ✨ Ánh xạ email
+      status: dto.status,
     );
   }
-}
 
-class StudentToDtoMapper implements IMapper<Student, UpdateInsertStudentRequestDto> {
-  @override
-  UpdateInsertStudentRequestDto map(Student input) {
+  static UpdateInsertStudentRequestDto toInsertRequest(Student entity) {
     return UpdateInsertStudentRequestDto(
-      id: input.id,
-      campaignId: input.campaignId, // ✨ Đã thêm thuộc tính này
-      studentCode: input.studentCode,
-      name: input.name,
-      className: input.className,
-      status: input.status,
+      id: entity.id,
+      campaignId: entity.campaignId,
+      studentCode: entity.studentCode,
+      name: entity.name,
+      className: entity.className,
+      email: entity.email, // ✨ Ánh xạ email
+      status: entity.status,
     );
   }
 }

@@ -34,4 +34,13 @@ class HealthRecordApi implements IHealthRecordApi {
     await db.insert('health_records', _toDto.map(record).toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
     return record;
   }
+
+  @override
+  Future<List<HealthRecordDto>> getAllRecords() async {
+    final db = await AppDatabase.instance.db;
+    final List<Map<String, dynamic>> maps = await db.query('health_records');
+
+    // ✨ FIX LỖI: Sửa fromJson thành fromMap cho đồng bộ với các hàm trên
+    return maps.map((e) => HealthRecordDto.fromMap(e)).toList();
+  }
 }

@@ -28,6 +28,7 @@ class StationFormViewModel extends ChangeNotifier {
             studentCode: student.studentCode,
             name: student.name,
             className: student.className,
+            email: student.email,
             status: 'completed'
         ));
       } else if (student.status == 'not_started') {
@@ -37,6 +38,7 @@ class StationFormViewModel extends ChangeNotifier {
             studentCode: student.studentCode,
             name: student.name,
             className: student.className,
+            email: student.email,
             status: 'in_progress'
         ));
       }

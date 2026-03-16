@@ -5,7 +5,7 @@ void showStudentDetailDialog(
     BuildContext context,
     Student student,
     int completedStations,
-    String campaignName, // ✨ Bắt buộc phải thêm tham số này
+    String campaignName,
     ) {
   showDialog(
     context: context,
@@ -26,7 +26,15 @@ void showStudentDetailDialog(
             Text('${student.studentCode} - Lớp ${student.className}', style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
             const Divider(height: 32),
 
-            // ✨ THÊM DÒNG HIỂN THỊ CHIẾN DỊCH VÀO ĐÂY
+            // ✨ ĐÃ THÊM: Dòng hiển thị Email của sinh viên
+            _buildRow(
+                Icons.email_outlined,
+                'Email',
+                student.email,
+                Colors.grey.shade800
+            ),
+            const SizedBox(height: 12),
+
             _buildRow(
                 Icons.event_note_rounded,
                 'Chiến dịch',
@@ -65,7 +73,6 @@ void showStudentDetailDialog(
   );
 }
 
-// ✨ Sửa lại _buildRow một chút để tên Chiến dịch dài không bị tràn màn hình
 Widget _buildRow(IconData icon, String label, String value, Color color) {
   return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -382,7 +382,7 @@ import '../../../domain/entities/campaign.dart';
 
 class ImportStudentDialog extends StatefulWidget {
   final List<Student> existingStudents;
-  final List<Campaign> campaigns; // Nhận toàn bộ danh sách chiến dịch
+  final List<Campaign> campaigns;
   final String? initialCampaignId;
   final Function(String targetCampaignId, List<Map<String, dynamic>> importedData) onImport;
 
@@ -415,7 +415,6 @@ class _ImportStudentDialogState extends State<ImportStudentDialog> {
   @override
   void initState() {
     super.initState();
-    // ✨ LỌC CHIẾN DỊCH: Chỉ lấy các chiến dịch Đang diễn ra hoặc Sắp tới
     _validCampaigns = widget.campaigns.where((c) => ['active', 'ongoing', 'upcoming'].contains(c.status.toLowerCase())).toList();
 
     if (_validCampaigns.isNotEmpty) {
@@ -444,9 +443,10 @@ class _ImportStudentDialogState extends State<ImportStudentDialog> {
     try {
       var excel = Excel.createExcel();
       Sheet sheet = excel['Sheet1'];
-      sheet.appendRow([TextCellValue('Mã SV'), TextCellValue('Họ tên'), TextCellValue('Lớp')]);
-      sheet.appendRow([TextCellValue('SV005'), TextCellValue('Nguyễn Hoàng Đạo'), TextCellValue('CNTT-K64')]);
-      sheet.appendRow([TextCellValue('SV006'), TextCellValue('Trần Thị Tươi Thắm'), TextCellValue('CNTT-K64')]);
+      // ✨ CẬP NHẬT FILE MẪU CÓ 4 CỘT
+      sheet.appendRow([TextCellValue('Mã SV'), TextCellValue('Họ tên'), TextCellValue('Lớp'), TextCellValue('Email')]);
+      sheet.appendRow([TextCellValue('SV005'), TextCellValue('Nguyễn Hoàng Đạo'), TextCellValue('CNTT-K64'), TextCellValue('sv005@truong.edu.vn')]);
+      sheet.appendRow([TextCellValue('SV006'), TextCellValue('Trần Thị Tươi Thắm'), TextCellValue('CNTT-K64'), TextCellValue('sv006@truong.edu.vn')]);
 
       var fileBytes = excel.save();
       Directory? directory;
@@ -474,9 +474,10 @@ class _ImportStudentDialogState extends State<ImportStudentDialog> {
     List<int>? bytesToProcess;
 
     if (_isMockMode) {
+      // ✨ CẬP NHẬT DỮ LIỆU MOCK CÓ THÊM EMAIL
       _validStudents = [
-        {'studentCode': 'SV_MOCK_1', 'name': 'Data Ảo 1', 'className': 'TEST-01'},
-        {'studentCode': 'SV_MOCK_2', 'name': 'Data Ảo 2', 'className': 'TEST-01'},
+        {'studentCode': 'SV_MOCK_1', 'name': 'Data Ảo 1', 'className': 'TEST-01', 'email': 'mock1@truong.edu.vn'},
+        {'studentCode': 'SV_MOCK_2', 'name': 'Data Ảo 2', 'className': 'TEST-01', 'email': 'mock2@truong.edu.vn'},
       ];
     } else if (_selectedFile != null) {
       if (_selectedFile!.bytes != null) bytesToProcess = _selectedFile!.bytes;
@@ -498,15 +499,21 @@ class _ImportStudentDialogState extends State<ImportStudentDialog> {
             String studentCode = row[0]?.value?.toString().trim() ?? '';
             String name = row.length > 1 ? (row[1]?.value?.toString().trim() ?? '') : '';
             String className = row.length > 2 ? (row[2]?.value?.toString().trim() ?? '') : '';
+            // ✨ ĐỌC EMAIL TỪ CỘT THỨ 4 (Index 3)
+            String email = row.length > 3 ? (row[3]?.value?.toString().trim() ?? '') : '';
 
-            if (studentCode.isEmpty || name.isEmpty || className.isEmpty) { _errors.add('Dòng ${i + 1}: Thiếu thông tin bắt buộc'); continue; }
+            if (studentCode.isEmpty || name.isEmpty || className.isEmpty || email.isEmpty) {
+              _errors.add('Dòng ${i + 1}: Thiếu thông tin bắt buộc');
+              continue;
+            }
 
             String codeLC = studentCode.toLowerCase();
             if (existingCodes.contains(codeLC)) { _duplicates.add('$studentCode (đã tồn tại)'); continue; }
             if (importedCodes.contains(codeLC)) { _duplicates.add('$studentCode (trùng lặp trong file)'); continue; }
 
             importedCodes.add(codeLC);
-            _validStudents.add({'studentCode': studentCode, 'name': name, 'className': className});
+            // ✨ TRẢ VỀ THÊM EMAIL
+            _validStudents.add({'studentCode': studentCode, 'name': name, 'className': className, 'email': email});
           }
         }
       } catch (e) { _errors.add('Lỗi định dạng Excel.'); }
@@ -534,7 +541,6 @@ class _ImportStudentDialogState extends State<ImportStudentDialog> {
               const FittedBox(fit: BoxFit.scaleDown, child: Text('Import danh sách sinh viên', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
               const SizedBox(height: 16),
 
-              // ✨ GIAO DIỆN CHỌN CHIẾN DỊCH (Có status màu)
               if (_validCampaigns.isEmpty)
                 Container(
                     padding: const EdgeInsets.all(16),
@@ -592,7 +598,8 @@ class _ImportStudentDialogState extends State<ImportStudentDialog> {
                     children: [
                       Icon(Icons.file_present_rounded, color: Colors.blue.shade600),
                       const SizedBox(width: 12),
-                      const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Hướng dẫn:', style: TextStyle(fontWeight: FontWeight.bold)), SizedBox(height: 4), Text('1. File có 3 cột: Mã SV, Họ tên, Lớp\n2. Hỗ trợ .xlsx hoặc .xls', style: TextStyle(fontSize: 13, height: 1.5))]))
+                      // ✨ HƯỚNG DẪN 4 CỘT
+                      const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Hướng dẫn:', style: TextStyle(fontWeight: FontWeight.bold)), SizedBox(height: 4), Text('1. File có 4 cột: Mã SV, Họ tên, Lớp, Email\n2. Hỗ trợ .xlsx hoặc .xls', style: TextStyle(fontSize: 13, height: 1.5))]))
                     ],
                   ),
                 ),

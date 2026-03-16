@@ -346,7 +346,7 @@ class StudentManagementPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 ...vm.filteredStudents.map(
-                  (s) => _buildStudentCard(context, s, vm),
+                      (s) => _buildStudentCard(context, s, vm),
                 ),
               ],
             ),
@@ -368,7 +368,7 @@ class StudentManagementPage extends StatelessWidget {
           TextField(
             onChanged: vm.setSearchTerm,
             decoration: InputDecoration(
-              hintText: 'Tìm theo tên hoặc MSSV...',
+              hintText: 'Tìm theo tên, MSSV, hoặc Email...',
               hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
               prefixIcon: Icon(
                 Icons.search_rounded,
@@ -419,7 +419,7 @@ class StudentManagementPage extends StatelessWidget {
                         ),
                       ),
                       ...vm.campaigns.map(
-                        (c) => DropdownMenuItem(
+                            (c) => DropdownMenuItem(
                           value: c.id,
                           child: Padding(
                             padding: const EdgeInsets.only(left: 16),
@@ -468,7 +468,7 @@ class StudentManagementPage extends StatelessWidget {
                         ),
                       ),
                       ...vm.availableClasses.map(
-                        (c) => DropdownMenuItem(
+                            (c) => DropdownMenuItem(
                           value: c,
                           child: Padding(
                             padding: const EdgeInsets.only(left: 16),
@@ -521,9 +521,9 @@ class StudentManagementPage extends StatelessWidget {
   }
 
   Widget _buildProgressCard(
-    BuildContext context,
-    StudentManagementViewModel vm,
-  ) {
+      BuildContext context,
+      StudentManagementViewModel vm,
+      ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -576,8 +576,8 @@ class StudentManagementPage extends StatelessWidget {
                         String targetCampaignId = vm.tempCampaignFilter != 'all'
                             ? vm.tempCampaignFilter
                             : (vm.campaigns.isNotEmpty
-                                  ? vm.campaigns.first.id
-                                  : '');
+                            ? vm.campaigns.first.id
+                            : '');
 
                         String campName = 'Tất cả chiến dịch';
                         try {
@@ -594,30 +594,17 @@ class StudentManagementPage extends StatelessWidget {
                             initialCampaignId: vm.tempCampaignFilter,
                             onImport: (targetCampaignId, listData) async {
                               Navigator.pop(context);
-                              int successCount = 0;
-
-                              for (var data in listData) {
-                                final isSuccess = await vm.createStudent(
-                                  Student(
-                                    id: const Uuid().v4(),
-                                    campaignId: targetCampaignId,
-                                    studentCode: data['studentCode'],
-                                    name: data['name'],
-                                    className: data['className'],
-                                    status: 'not_started',
-                                  ),
-                                );
-                                if (isSuccess) successCount++;
-                              }
-                              if (context.mounted)
+                              final success = await vm.importStudents(targetCampaignId, listData);
+                              if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      'Import thành công $successCount sinh viên!',
+                                      success ? 'Import thành công!' : vm.error,
                                     ),
-                                    backgroundColor: Colors.green,
+                                    backgroundColor: success ? Colors.green : Colors.red,
                                   ),
                                 );
+                              }
                             },
                           ),
                         );
@@ -644,12 +631,14 @@ class StudentManagementPage extends StatelessWidget {
                             campaigns: vm.campaigns,
                             initialCampaignId: vm.tempCampaignFilter,
                             onSave: (data) async {
+                              // ✨ ĐÃ FIX: Bổ sung trường email
                               final newStudent = Student(
                                 id: const Uuid().v4(),
                                 campaignId: data['campaignId'],
                                 studentCode: data['studentCode'],
                                 name: data['name'],
                                 className: data['className'],
+                                email: data['email'] ?? '',
                                 status: 'not_started',
                               );
                               final success = await vm.createStudent(
@@ -759,12 +748,12 @@ class StudentManagementPage extends StatelessWidget {
   }
 
   Widget _buildStatBox(
-    String label,
-    int count,
-    Color bgColor,
-    Color fgColor,
-    IconData icon,
-  ) {
+      String label,
+      int count,
+      Color bgColor,
+      Color fgColor,
+      IconData icon,
+      ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
@@ -808,10 +797,10 @@ class StudentManagementPage extends StatelessWidget {
   }
 
   Widget _buildStudentCard(
-    BuildContext context,
-    Student student,
-    StudentManagementViewModel vm,
-  ) {
+      BuildContext context,
+      Student student,
+      StudentManagementViewModel vm,
+      ) {
     final completedStations = vm.getCompletedStationsCount(student.id);
     Color statusBgColor, statusFgColor;
     String statusText;
@@ -829,7 +818,6 @@ class StudentManagementPage extends StatelessWidget {
       statusText = 'Chưa khám';
     }
 
-    // ✨ BIẾN CHIẾN DỊCH KHAI BÁO BÊN NGOÀI ĐỂ DÙNG CHUNG CHO QR VÀ DETAIL
     String currentCampaignName = 'Không xác định';
     try {
       currentCampaignName = vm.campaigns
@@ -890,6 +878,16 @@ class StudentManagementPage extends StatelessWidget {
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    // ✨ ĐÃ FIX: Thêm hiển thị Email cho thẻ sinh viên
+                    Text(
+                      '✉️ ${student.email}',
+                      style: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 11,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -987,7 +985,7 @@ class StudentManagementPage extends StatelessWidget {
                 Icons.qr_code_rounded,
                 Colors.purple.shade50,
                 Colors.purple.shade400,
-                () => showQRCodeDialog(
+                    () => showQRCodeDialog(
                   context,
                   student,
                   campaignName: currentCampaignName,
@@ -998,7 +996,7 @@ class StudentManagementPage extends StatelessWidget {
                 Icons.edit_rounded,
                 Colors.grey.shade100,
                 Colors.grey.shade700,
-                () {
+                    () {
                   showDialog(
                     context: context,
                     builder: (_) => StudentForm(
@@ -1006,6 +1004,7 @@ class StudentManagementPage extends StatelessWidget {
                       campaigns: vm.campaigns,
                       initialCampaignId: vm.tempCampaignFilter,
                       onSave: (data) async {
+                        // ✨ ĐÃ FIX: Bổ sung trường email
                         final success = await vm.updateStudent(
                           Student(
                             id: student.id,
@@ -1013,6 +1012,7 @@ class StudentManagementPage extends StatelessWidget {
                             studentCode: data['studentCode'],
                             name: data['name'],
                             className: data['className'],
+                            email: data['email'] ?? '',
                             status: student.status,
                           ),
                         );
@@ -1033,7 +1033,7 @@ class StudentManagementPage extends StatelessWidget {
                 Icons.delete_outline_rounded,
                 Colors.red.shade50,
                 Colors.red.shade400,
-                () => showDeleteStudentDialog(context, student, () async {
+                    () => showDeleteStudentDialog(context, student, () async {
                   final success = await vm.deleteStudent(student.id);
                   if (context.mounted && !success)
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -1052,11 +1052,11 @@ class StudentManagementPage extends StatelessWidget {
   }
 
   Widget _buildActionButton(
-    IconData icon,
-    Color bgColor,
-    Color iconColor,
-    VoidCallback onTap,
-  ) {
+      IconData icon,
+      Color bgColor,
+      Color iconColor,
+      VoidCallback onTap,
+      ) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(10),
