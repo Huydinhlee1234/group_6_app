@@ -452,7 +452,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               child: Icon(currentMenu['icon'], color: currentMenu['color'], size: 20),
             ),
             const SizedBox(width: 12),
-            // ✨ FIX: Bọc Expanded cho Title để tránh tràn lấn sang phần Actions
             Expanded(
               child: Text(
                 currentMenu['title'],
@@ -467,28 +466,23 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // ✨ FIX: Giới hạn chiều rộng của Text Admin để bảo vệ UI trên điện thoại nhỏ
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 120),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const Text(
-                        'Nguyễn Admin',
-                        style: TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.bold),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis, // Sẽ thành "Nguyễn Ad..." nếu quá dài
-                      ),
-                      Text(
-                        'Quản trị viên',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
+                // ✨ FIX: Đã gỡ bỏ ConstrainedBox gây lỗi tràn 3 pixel.
+                // Cụm thông tin Admin sẽ được hiển thị với kích thước tự nhiên thoải mái.
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'Nguyễn Admin',
+                      style: TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      'Quản trị viên',
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                    ),
+                  ],
                 ),
                 const SizedBox(width: 12),
                 CircleAvatar(

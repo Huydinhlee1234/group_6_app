@@ -20,7 +20,7 @@ class AppDatabase {
 
     // ✨ BƯỚC 1: MỞ KHÓA DÒNG NÀY ĐỂ RESET DATABASE (Xóa DB cũ đi để nạp data mới)
     // Lưu ý: Sau khi chạy app lên thấy đúng rồi, bạn có thể comment dòng này lại.
-    await deleteDatabase(path);
+    //await deleteDatabase(path);
 
     return openDatabase(
       path,
