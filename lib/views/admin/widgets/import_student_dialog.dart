@@ -445,8 +445,8 @@ class _ImportStudentDialogState extends State<ImportStudentDialog> {
       Sheet sheet = excel['Sheet1'];
       // ✨ CẬP NHẬT FILE MẪU CÓ 4 CỘT
       sheet.appendRow([TextCellValue('Mã SV'), TextCellValue('Họ tên'), TextCellValue('Lớp'), TextCellValue('Email')]);
-      sheet.appendRow([TextCellValue('SV005'), TextCellValue('Nguyễn Hoàng Đạo'), TextCellValue('CNTT-K64'), TextCellValue('sv005@truong.edu.vn')]);
-      sheet.appendRow([TextCellValue('SV006'), TextCellValue('Trần Thị Tươi Thắm'), TextCellValue('CNTT-K64'), TextCellValue('sv006@truong.edu.vn')]);
+      sheet.appendRow([TextCellValue('SV005'), TextCellValue('Nguyễn Hoàng Đạo'), TextCellValue('CNTT-K64'), TextCellValue('tiepnnkhe186589@fpt.edu.vn')]);
+      sheet.appendRow([TextCellValue('SV006'), TextCellValue('Trần Thị Tươi Thắm'), TextCellValue('CNTT-K64'), TextCellValue('huyldhe186829@fpt.edu.vn')]);
 
       var fileBytes = excel.save();
       Directory? directory;
