@@ -369,7 +369,6 @@ class ReportsViewModel extends ChangeNotifier {
     final total = completedRecords.length;
     if (total == 0) return null;
 
-    // ✨ TÁCH THÀNH 5 MỐC CHUẨN CHÂU Á
     int underweight = 0, normal = 0, overweight = 0, obese1 = 0, obese2 = 0;
 
     for (var r in completedRecords) {
@@ -377,9 +376,12 @@ class ReportsViewModel extends ChangeNotifier {
       if (category == 'underweight') underweight++;
       else if (category == 'normal') normal++;
       else if (category == 'overweight') overweight++;
-      else if (category == 'obese_1' || category == 'obese') obese1++; // Kế thừa data cũ
+      else if (category == 'obese_1' || category == 'obese') obese1++;
       else if (category == 'obese_2') obese2++;
     }
+
+    // ✨ TÍNH TỔNG BÉO PHÌ ĐỂ FIX LỖI CHO FILE XUẤT BÁO CÁO CŨ
+    int totalObese = obese1 + obese2;
 
     return {
       'total': total,
@@ -388,6 +390,10 @@ class ReportsViewModel extends ChangeNotifier {
       'overweight': overweight,
       'obese_1': obese1,
       'obese_2': obese2,
+
+      // ✨ THÊM LẠI 2 BIẾN NÀY ĐỂ PDF VÀ EXCEL KHÔNG BỊ CRASH NỮA
+      'obese': totalObese,
+      'obesePercent': (totalObese / total) * 100,
       'underweightPercent': (underweight / total) * 100,
       'normalPercent': (normal / total) * 100,
       'overweightPercent': (overweight / total) * 100,

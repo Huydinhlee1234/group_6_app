@@ -103,43 +103,61 @@ class _ReportExportDialogState extends State<ReportExportDialog> {
               ),
               const SizedBox(height: 32),
 
-              // Actions
+              // ✨ ĐÃ SỬA: Actions (2 Nút cân đối, chống tràn viền)
+              // Actions (Đã fix cứng tỷ lệ 1:1 và đồng bộ kích cỡ chữ)
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        side: BorderSide(color: Colors.grey.shade300),
+                    flex: 1, // Ép cứng tỷ lệ bằng nhau
+                    child: SizedBox(
+                      height: 48, // Khóa cố định chiều cao cho 2 nút bằng nhau chằn chặn
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          side: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        child: Text(
+                          'Hủy',
+                          style: TextStyle(color: Colors.grey.shade700, fontSize: 14, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                        ),
                       ),
-                      child: Text('Hủy', style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w600)),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    flex: 2, // Đưa nhiều không gian hơn cho nút Xác nhận
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        final title = _titleCtrl.text.trim();
-                        if (title.isEmpty) return;
+                    flex: 1, // Ép cứng tỷ lệ bằng nhau
+                    child: SizedBox(
+                      height: 48, // Khóa cố định chiều cao
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final title = _titleCtrl.text.trim();
+                          if (title.isEmpty) return;
 
-                        Navigator.pop(context); // Đóng form
-                        widget.onConfirm(title, _notesCtrl.text.trim()); // Gọi hàm xuất
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: color,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      icon: const Icon(Icons.share_rounded, size: 18),
-                      label: const FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          'Xác nhận & Chia sẻ',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          Navigator.pop(context); // Đóng form
+                          widget.onConfirm(title, _notesCtrl.text.trim()); // Gọi hàm xuất
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: color,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(horizontal: 4), // Giảm padding ngang để chứa đủ chữ
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.share_rounded, size: 16),
+                            SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                'Xác nhận', // Rút gọn chữ một chút để nút không bị quá chật
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

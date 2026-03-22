@@ -7,7 +7,7 @@ import 'package:printing/printing.dart';
 import 'package:excel/excel.dart';
 
 class ReportExporter {
-  // 1. HÀM XUẤT PDF
+  // 1. HÀM XUẤT PDF (ĐÃ NÂNG CẤP LÊN 5 MỐC CHUẨN CHÂU Á)
   static Future<void> exportPdf(Map<String, dynamic> bmiStats, Map<String, int> classStats, String reportTitle, String notes) async {
     final pdf = pw.Document();
 
@@ -28,13 +28,16 @@ class ReportExporter {
               ],
               pw.SizedBox(height: 30),
 
-              pw.Text('1. Thống kê chỉ số BMI', style: pw.TextStyle(font: fontBold, fontSize: 16)),
+              pw.Text('1. Thống kê chỉ số BMI (Chuẩn IDI & WPRO)', style: pw.TextStyle(font: fontBold, fontSize: 16)),
               pw.SizedBox(height: 10),
               pw.Text('Tổng số SV hoàn thành: ${bmiStats['total']}', style: pw.TextStyle(font: font)),
+
+              // ✨ ĐÃ TÁCH THÀNH 5 DÒNG TƯƠNG ỨNG 5 MỐC
+              pw.Text('Gầy (Thiếu cân): ${bmiStats['underweight']} SV (${bmiStats['underweightPercent'].toStringAsFixed(1)}%)', style: pw.TextStyle(font: font)),
               pw.Text('Bình thường: ${bmiStats['normal']} SV (${bmiStats['normalPercent'].toStringAsFixed(1)}%)', style: pw.TextStyle(font: font)),
-              pw.Text('Thiếu cân: ${bmiStats['underweight']} SV (${bmiStats['underweightPercent'].toStringAsFixed(1)}%)', style: pw.TextStyle(font: font)),
-              pw.Text('Thừa cân: ${bmiStats['overweight']} SV (${bmiStats['overweightPercent'].toStringAsFixed(1)}%)', style: pw.TextStyle(font: font)),
-              pw.Text('Béo phì: ${bmiStats['obese']} SV (${bmiStats['obesePercent'].toStringAsFixed(1)}%)', style: pw.TextStyle(font: font)),
+              pw.Text('Thừa cân (Tiền béo phì): ${bmiStats['overweight']} SV (${bmiStats['overweightPercent'].toStringAsFixed(1)}%)', style: pw.TextStyle(font: font)),
+              pw.Text('Béo phì độ 1: ${bmiStats['obese_1']} SV (${bmiStats['obese1Percent'].toStringAsFixed(1)}%)', style: pw.TextStyle(font: font)),
+              pw.Text('Béo phì độ 2: ${bmiStats['obese_2']} SV (${bmiStats['obese2Percent'].toStringAsFixed(1)}%)', style: pw.TextStyle(font: font)),
               pw.SizedBox(height: 20),
 
               pw.Text('2. Hoàn thành theo lớp', style: pw.TextStyle(font: fontBold, fontSize: 16)),
@@ -46,14 +49,14 @@ class ReportExporter {
       ),
     );
 
-    // ✨ FIX LỖI: Sửa lại Regex lọc tên file để GIỮ NGUYÊN TIẾNG VIỆT
+    // Lọc tên file giữ nguyên tiếng Việt
     final safeFileName = reportTitle.replaceAll(RegExp(r'[\\/:*?"<>|]'), '').replaceAll(' ', '_');
 
     // Lưu và chia sẻ PDF
     await Printing.sharePdf(bytes: await pdf.save(), filename: '${safeFileName}_Report.pdf');
   }
 
-  // 2. HÀM XUẤT EXCEL
+  // 2. HÀM XUẤT EXCEL (ĐÃ NÂNG CẤP LÊN 5 MỐC CHUẨN CHÂU Á)
   static Future<void> exportExcel(Map<String, dynamic> bmiStats, Map<String, int> classStats, String reportTitle, String notes) async {
     var excel = Excel.createExcel();
 
@@ -64,10 +67,13 @@ class ReportExporter {
     sheetBmi.appendRow([TextCellValue('')]); // Dòng trống
 
     sheetBmi.appendRow([TextCellValue('Phân loại'), TextCellValue('Số lượng'), TextCellValue('Tỷ lệ (%)')]);
-    sheetBmi.appendRow([TextCellValue('Thiếu cân'), IntCellValue(bmiStats['underweight']), DoubleCellValue(bmiStats['underweightPercent'])]);
+
+    // ✨ ĐÃ TÁCH THÀNH 5 DÒNG TƯƠNG ỨNG 5 MỐC
+    sheetBmi.appendRow([TextCellValue('Gầy (Thiếu cân)'), IntCellValue(bmiStats['underweight']), DoubleCellValue(bmiStats['underweightPercent'])]);
     sheetBmi.appendRow([TextCellValue('Bình thường'), IntCellValue(bmiStats['normal']), DoubleCellValue(bmiStats['normalPercent'])]);
-    sheetBmi.appendRow([TextCellValue('Thừa cân'), IntCellValue(bmiStats['overweight']), DoubleCellValue(bmiStats['overweightPercent'])]);
-    sheetBmi.appendRow([TextCellValue('Béo phì'), IntCellValue(bmiStats['obese']), DoubleCellValue(bmiStats['obesePercent'])]);
+    sheetBmi.appendRow([TextCellValue('Thừa cân (Tiền béo phì)'), IntCellValue(bmiStats['overweight']), DoubleCellValue(bmiStats['overweightPercent'])]);
+    sheetBmi.appendRow([TextCellValue('Béo phì độ 1'), IntCellValue(bmiStats['obese_1']), DoubleCellValue(bmiStats['obese1Percent'])]);
+    sheetBmi.appendRow([TextCellValue('Béo phì độ 2'), IntCellValue(bmiStats['obese_2']), DoubleCellValue(bmiStats['obese2Percent'])]);
 
     // Sheet 2: Thống kê Lớp
     Sheet sheetClass = excel['Hoàn thành theo lớp'];

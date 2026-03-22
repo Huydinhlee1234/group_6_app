@@ -302,12 +302,11 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:qr_flutter/qr_flutter.dart';    // ✨ Dùng chính thư viện QR của bạn
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
 import '../../../domain/entities/student.dart';
 
-// ✨ ĐÃ XÓA MẪU "Lịch khám kèm mã QR" theo yêu cầu
 final List<Map<String, String>> emailTemplates = [
   {
     'id': 'reminder',
@@ -338,7 +337,7 @@ class _BulkEmailDialogState extends State<BulkEmailDialog> {
   String _selectedTemplateId = 'reminder';
   String _subject = '';
   String _content = '';
-  bool _includeQR = true; // ✨ Mặc định cho phép đính kèm QR luôn
+  bool _includeQR = true;
   bool _isPreviewMode = false;
 
   bool _isSending = false;
@@ -373,7 +372,6 @@ class _BulkEmailDialogState extends State<BulkEmailDialog> {
     }
   }
 
-  // ✨ HÀM VẼ ẢNH QR TRỰC TIẾP TỪ THƯ VIỆN BÊN TRONG APP (Giống file qr_code_generator)
   Future<File?> _generateQrFile(String qrDataStr, String studentCode) async {
     try {
       final qrValidationResult = QrValidator.validate(
@@ -389,11 +387,9 @@ class _BulkEmailDialogState extends State<BulkEmailDialog> {
           emptyColor: const Color(0xFFFFFFFF),
           gapless: true,
         );
-        // Chuyển mã QR thành dữ liệu ảnh PNG (kích thước 250x250)
         final picData = await painter.toImageData(250, format: ui.ImageByteFormat.png);
         final bytes = picData!.buffer.asUint8List();
 
-        // Lưu tạm vào bộ nhớ thiết bị để đính kèm vào Mail
         final tempDir = await getTemporaryDirectory();
         final file = File('${tempDir.path}/qr_$studentCode.png');
         await file.writeAsBytes(bytes);
@@ -429,21 +425,18 @@ class _BulkEmailDialogState extends State<BulkEmailDialog> {
           ..recipients.add(student.email)
           ..subject = _subject;
 
-        // ✨ NẾU CHỌN NHẮC NHỞ & ĐÍNH KÈM QR
         if (_selectedTemplateId == 'reminder' && _includeQR) {
           final qrData = jsonEncode({
             'studentCode': student.studentCode,
             'campaignId': student.campaignId,
           });
 
-          // Tạo ra file ảnh vật lý từ nội dung JSON
           final qrFile = await _generateQrFile(qrData, student.studentCode);
 
           if (qrFile != null) {
-            // Nhúng file ảnh trực tiếp vào Email (Content-ID inline)
             final attachment = FileAttachment(qrFile)
               ..location = Location.inline
-              ..cid = '<qrcode_${student.studentCode}>'; // Đặt ID riêng cho ảnh
+              ..cid = '<qrcode_${student.studentCode}>';
 
             message.attachments.add(attachment);
 
@@ -524,35 +517,70 @@ class _BulkEmailDialogState extends State<BulkEmailDialog> {
             ),
 
             const Divider(height: 1),
+
+            // ✨ ĐÃ SỬA LỖI OVERFLOW Ở DƯỚI ĐÂY (Bọc bằng Expanded và FittedBox)
+            // ✨ ĐÃ SỬA: Tăng chiều cao nút và set cứng cỡ chữ to (16)
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: _isPreviewMode
                     ? [
-                  OutlinedButton(
-                      onPressed: _isSending ? null : () => setState(() => _isPreviewMode = false),
-                      child: const Text('Quay lại')
+                  Expanded( // Nút Quay lại
+                    flex: 1,
+                    child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onPressed: _isSending ? null : () => setState(() => _isPreviewMode = false),
+                        child: const FittedBox(fit: BoxFit.scaleDown, child: Text('Quay lại', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)))
+                    ),
                   ),
                   const SizedBox(width: 12),
-                  ElevatedButton.icon(
-                    onPressed: _isSending ? null : () => _sendRealEmails(recipients),
-                    icon: _isSending
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Icon(Icons.send_rounded, size: 16),
-                    label: Text(_isSending ? 'Đang gửi thực tế...' : 'Gửi email (${recipients.length})', maxLines: 1, overflow: TextOverflow.ellipsis),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade600, foregroundColor: Colors.white),
+                  Expanded( // Nút Gửi email
+                    flex: 2,
+                    child: ElevatedButton.icon(
+                      onPressed: _isSending ? null : () => _sendRealEmails(recipients),
+                      icon: _isSending
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Icon(Icons.send_rounded, size: 18),
+                      label: FittedBox(fit: BoxFit.scaleDown, child: Text(_isSending ? 'Đang gửi...' : 'Gửi email (${recipients.length})', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade600,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
                   ),
                 ]
                     : [
-                  OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Hủy')),
+                  Expanded( // Nút Hủy
+                    flex: 1,
+                    child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const FittedBox(fit: BoxFit.scaleDown, child: Text('Hủy', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)))
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: (_subject.trim().isEmpty || _content.trim().isEmpty || recipients.isEmpty || (_filter == 'by_class' && _selectedClass.isEmpty))
-                        ? null
-                        : () => setState(() => _isPreviewMode = true),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade600, foregroundColor: Colors.white),
-                    child: const Text('Tiếp tục'),
+                  Expanded( // Nút Tiếp tục
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: (_subject.trim().isEmpty || _content.trim().isEmpty || recipients.isEmpty || (_filter == 'by_class' && _selectedClass.isEmpty))
+                          ? null
+                          : () => setState(() => _isPreviewMode = true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade600,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const FittedBox(fit: BoxFit.scaleDown, child: Text('Tiếp tục', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+                    ),
                   ),
                 ],
               ),
@@ -617,7 +645,6 @@ class _BulkEmailDialogState extends State<BulkEmailDialog> {
           onChanged: (val) => _applyTemplate(val!),
         ),
 
-        // ✨ CHỈ HIỂN THỊ DÒNG ĐÍNH KÈM KHI CHỌN "Nhắc nhở khám sức khỏe"
         if (_selectedTemplateId == 'reminder') ...[
           const SizedBox(height: 16),
           Container(
