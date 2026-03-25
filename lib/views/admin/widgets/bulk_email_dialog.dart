@@ -604,7 +604,7 @@ class _BulkEmailDialogState extends State<BulkEmailDialog> {
             DropdownMenuItem(value: 'all', child: Text('Tất cả sinh viên', maxLines: 1, overflow: TextOverflow.ellipsis)),
             DropdownMenuItem(value: 'completed', child: Text('Đã hoàn thành khám', maxLines: 1, overflow: TextOverflow.ellipsis)),
             DropdownMenuItem(value: 'in_progress', child: Text('Đang khám', maxLines: 1, overflow: TextOverflow.ellipsis)),
-            DropdownMenuItem(value: 'not_started', child: Text('Chưa bắt đầu', maxLines: 1, overflow: TextOverflow.ellipsis)),
+            DropdownMenuItem(value: 'not_started', child: Text('Chưa khám', maxLines: 1, overflow: TextOverflow.ellipsis)),
             DropdownMenuItem(value: 'by_class', child: Text('Theo lớp', maxLines: 1, overflow: TextOverflow.ellipsis)),
           ],
           onChanged: (val) => setState(() => _filter = val!),

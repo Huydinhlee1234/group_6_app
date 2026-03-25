@@ -740,8 +740,8 @@ class _ImportStudentDialogState extends State<ImportStudentDialog> {
       var excel = Excel.createExcel();
       Sheet sheet = excel['Sheet1'];
       sheet.appendRow([TextCellValue('Mã SV'), TextCellValue('Họ tên'), TextCellValue('Lớp'), TextCellValue('Email')]);
-      sheet.appendRow([TextCellValue('SV005'), TextCellValue('Nguyễn Hoàng Đạo'), TextCellValue('CNTT-K64'), TextCellValue('tiepnnkhe186589@fpt.edu.vn')]);
-      sheet.appendRow([TextCellValue('SV006'), TextCellValue('Trần Thị Tươi Thắm'), TextCellValue('CNTT-K64'), TextCellValue('huyldhe186829@fpt.edu.vn')]);
+      sheet.appendRow([TextCellValue('HE184321'), TextCellValue('Nguyễn Hoàng Đạo'), TextCellValue('SE1873-JS'), TextCellValue('tiepnnkhe186589@fpt.edu.vn')]);
+      sheet.appendRow([TextCellValue('HE182468'), TextCellValue('Trần Thị Tươi Thắm'), TextCellValue('SE1873-JS'), TextCellValue('huyldhe186829@fpt.edu.vn')]);
 
       var fileBytes = excel.save();
       Directory? directory;

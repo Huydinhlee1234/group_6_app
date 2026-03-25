@@ -19,11 +19,11 @@ class AppDatabase {
     final path = join(dbPath, 'health_check.db');
 
     // ✨ MỞ KHÓA DÒNG NÀY ĐỂ TẠO LẠI DB CÓ CỘT EMAIL
-    await deleteDatabase(path);
+    //await deleteDatabase(path);
 
     return openDatabase(
       path,
-      version: 4, // Tăng version
+      version: 5, // Tăng version
       onCreate: (Database db, int version) async {
         await db.execute('''
           CREATE TABLE users(
@@ -111,10 +111,34 @@ class AppDatabase {
 
         // ✨ THÊM EMAIL CHO DỮ LIỆU MẪU
         await db.insert('students', {
-          'id': '1', 'campaign_id': '1', 'student_code': 'SV001', 'name': 'Nguyễn Văn An', 'class_name': 'CNTT-K64', 'email': 'kietleedinh@gmail.com', 'status': 'completed'
+          'id': '1', 'campaign_id': '1', 'student_code': 'HE186828', 'name': 'Nguyễn Văn An', 'class_name': 'SE1873-JS', 'email': 'kietleedinh@gmail.com', 'status': 'completed'
         });
         await db.insert('students', {
-          'id': '2', 'campaign_id': '1', 'student_code': 'SV002', 'name': 'Trần Thị Bình', 'class_name': 'CNTT-K64', 'email': 'kietleedinh@gmail.com', 'status': 'in_progress'
+          'id': '2', 'campaign_id': '1', 'student_code': 'HE181764', 'name': 'Trần Thị Bình', 'class_name': 'SE1873-JS', 'email': 'pvietduc204@gmail.com', 'status': 'in_progress'
+        });
+        await db.insert('students', {
+          'id': '3', 'campaign_id': '1', 'student_code': 'HE181222', 'name': 'Nguyễn Quang Sáng', 'class_name': 'SE1873-JS', 'email': 'nhaipthe186985@fpt.edu.vn', 'status': 'not_started'
+        });
+        await db.insert('students', {
+          'id': '4', 'campaign_id': '1', 'student_code': 'HE182225', 'name': 'Đào Tuấn Hoàng', 'class_name': 'SE1873-JS', 'email': 'ducpvhe180361@fpt.edu.vn', 'status': 'not_started'
+        });
+        await db.insert('students', {
+          'id': '5', 'campaign_id': '1', 'student_code': 'HE182245', 'name': 'Hoàng Trọng Nghĩa', 'class_name': 'SE1873-JS', 'email': 'trinhvthe186282@fpt.edu.vn', 'status': 'not_started'
+        });
+        await db.insert('students', {
+          'id': '6', 'campaign_id': '1', 'student_code': 'HE182265', 'name': 'Bùi Ngọc Ánh', 'class_name': 'SE1873-JS', 'email': 'vutuyettrinh2004@gmail.com', 'status': 'not_started'
+        });
+        await db.insert('students', {
+          'id': '7', 'campaign_id': '1', 'student_code': 'HE183579', 'name': 'Nguyễn Thị Phương', 'class_name': 'SE1873-JS', 'email': 'bachnqhe187105@fpt.edu.vn', 'status': 'not_started'
+        });
+        await db.insert('students', {
+          'id': '8', 'campaign_id': '1', 'student_code': 'HE181790', 'name': 'Đoàn Thu Trang', 'class_name': 'SE1873-JS', 'email': 'tanglm.vtm@gmail.com', 'status': 'not_started'
+        });
+        await db.insert('students', {
+          'id': '9', 'campaign_id': '1', 'student_code': 'HE184555', 'name': 'Lê Thị Thu Trà', 'class_name': 'SE1873-JS', 'email': 'sinhld.lvh@gmail.com', 'status': 'not_started'
+        });
+        await db.insert('students', {
+          'id': '10', 'campaign_id': '1', 'student_code': 'HE184789', 'name': 'Lưu Tuấn Huy', 'class_name': 'SE1873-JS', 'email': 'dothuyhuong73@gmail.com', 'status': 'not_started'
         });
 
         await db.insert('health_records', {
