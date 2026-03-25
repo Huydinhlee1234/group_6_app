@@ -982,7 +982,6 @@
 //   }
 // }
 
-
 // import 'package:flutter/material.dart';
 // import 'package:provider/provider.dart';
 // import 'package:fl_chart/fl_chart.dart';
@@ -1489,6 +1488,1068 @@
 //     );
 //   }
 // }
+// import 'package:flutter/material.dart';
+// import 'package:provider/provider.dart';
+// import 'package:fl_chart/fl_chart.dart';
+// import '../../viewmodels/admin/reports_viewmodel.dart';
+// import '../../di.dart';
+// import 'widgets/report_export_dialog.dart';
+//
+// class ReportsPage extends StatelessWidget {
+//   const ReportsPage({super.key});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return ChangeNotifierProvider(
+//       create: (_) => sl<ReportsViewModel>(),
+//       child: Consumer<ReportsViewModel>(
+//         builder: (context, viewModel, child) {
+//           if (viewModel.isLoading) {
+//             return const Center(child: CircularProgressIndicator());
+//           }
+//
+//           final bmiStats = viewModel.bmiStats;
+//           // ✨ GỌI BIẾN OVERVIEW STATS ĐỂ LẤY SỐ LIỆU ĐẾM Y KHOA (THỂ TRẠNG, HUYẾT ÁP, THỊ LỰC)
+//           final overviewStats = viewModel.overviewStats;
+//
+//           return SingleChildScrollView(
+//             padding: const EdgeInsets.all(16.0),
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 const Text(
+//                   'Báo cáo & Thống kê',
+//                   style: TextStyle(
+//                     fontSize: 22,
+//                     fontWeight: FontWeight.bold,
+//                     color: Colors.black87,
+//                   ),
+//                 ),
+//                 const SizedBox(height: 16),
+//
+//                 _buildActionToolbar(context, viewModel),
+//                 const SizedBox(height: 16),
+//
+//                 if (bmiStats == null || bmiStats['total'] == 0)
+//                   _buildEmptyState()
+//                 else ...[
+//                   // ✨ TRUYỀN OVERVIEW STATS VÀO 5 THẺ THỐNG KÊ TRÊN CÙNG
+//                   _buildStatCardsRow(overviewStats),
+//                   const SizedBox(height: 16),
+//
+//                   // ✨ TRUYỀN BMI STATS VÀO BIỂU ĐỒ (5 MỐC CHUẨN CHÂU Á)
+//                   _buildChartsRow(bmiStats),
+//                   const SizedBox(height: 16),
+//
+//                   _buildClassCompletionChart(viewModel.classCompletionStats),
+//                   const SizedBox(height: 16),
+//
+//                   // ✨ TRUYỀN BMI STATS VÀO BẢNG DỮ LIỆU (5 MỐC CHUẨN CHÂU Á)
+//                   _buildDataTable(bmiStats),
+//                 ],
+//               ],
+//             ),
+//           );
+//         },
+//       ),
+//     );
+//   }
+//
+//   // --- WIDGETS CON ---
+//
+//   void _showExportDialog(
+//     BuildContext context,
+//     ReportsViewModel vm,
+//     String type,
+//   ) {
+//     if (vm.bmiStats == null) return;
+//
+//     final campaignName = vm.campaigns
+//         .firstWhere((c) => c.id == vm.selectedCampaignId)
+//         .name;
+//
+//     showDialog(
+//       context: context,
+//       builder: (BuildContext dialogContext) {
+//         return ReportExportDialog(
+//           exportType: type,
+//           defaultCampaignName: campaignName,
+//           onConfirm: (title, notes) {
+//             if (type == 'pdf') {
+//               vm.exportToPdf(context, title, notes);
+//             } else {
+//               vm.exportToExcel(context, title, notes);
+//             }
+//           },
+//         );
+//       },
+//     );
+//   }
+//
+//   Widget _buildCard({required Widget child, EdgeInsetsGeometry? padding}) {
+//     return Container(
+//       width: double.infinity,
+//       padding: padding ?? const EdgeInsets.all(16),
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         borderRadius: BorderRadius.circular(12),
+//         border: Border.all(color: Colors.grey.shade200),
+//         boxShadow: [
+//           BoxShadow(
+//             color: Colors.black.withOpacity(0.02),
+//             blurRadius: 8,
+//             offset: const Offset(0, 2),
+//           ),
+//         ],
+//       ),
+//       child: child,
+//     );
+//   }
+//
+//   Widget _buildActionToolbar(BuildContext context, ReportsViewModel vm) {
+//     return _buildCard(
+//       padding: const EdgeInsets.all(16),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.stretch,
+//         children: [
+//           Row(
+//             children: [
+//               Expanded(
+//                 flex: 5,
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     Text(
+//                       'Chiến dịch',
+//                       style: TextStyle(
+//                         fontSize: 13,
+//                         fontWeight: FontWeight.w600,
+//                         color: Colors.grey.shade700,
+//                       ),
+//                     ),
+//                     const SizedBox(height: 8),
+//                     Container(
+//                       height: 48,
+//                       padding: const EdgeInsets.symmetric(horizontal: 16),
+//                       decoration: BoxDecoration(
+//                         color: Colors.grey.shade50,
+//                         borderRadius: BorderRadius.circular(10),
+//                         border: Border.all(color: Colors.grey.shade200),
+//                       ),
+//                       child: DropdownButtonHideUnderline(
+//                         child: DropdownButton<String>(
+//                           isExpanded: true,
+//                           value: vm.selectedCampaignId,
+//                           icon: Icon(
+//                             Icons.keyboard_arrow_down_rounded,
+//                             size: 24,
+//                             color: Colors.grey.shade500,
+//                           ),
+//                           items: vm.campaigns
+//                               .map(
+//                                 (c) => DropdownMenuItem(
+//                                   value: c.id,
+//                                   child: Text(
+//                                     c.name,
+//                                     overflow: TextOverflow.ellipsis,
+//                                     style: const TextStyle(
+//                                       fontSize: 15,
+//                                       fontWeight: FontWeight.w500,
+//                                       color: Colors.black87,
+//                                     ),
+//                                   ),
+//                                 ),
+//                               )
+//                               .toList(),
+//                           onChanged: (val) => vm.setCampaignId(val!),
+//                         ),
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//               const SizedBox(width: 12),
+//               Expanded(
+//                 flex: 4,
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     Text(
+//                       'Lớp',
+//                       style: TextStyle(
+//                         fontSize: 13,
+//                         fontWeight: FontWeight.w600,
+//                         color: Colors.grey.shade700,
+//                       ),
+//                     ),
+//                     const SizedBox(height: 8),
+//                     Container(
+//                       height: 48,
+//                       padding: const EdgeInsets.symmetric(horizontal: 16),
+//                       decoration: BoxDecoration(
+//                         color: Colors.grey.shade50,
+//                         borderRadius: BorderRadius.circular(10),
+//                         border: Border.all(color: Colors.grey.shade200),
+//                       ),
+//                       child: DropdownButtonHideUnderline(
+//                         child: DropdownButton<String>(
+//                           isExpanded: true,
+//                           value: vm.selectedClass,
+//                           icon: Icon(
+//                             Icons.keyboard_arrow_down_rounded,
+//                             size: 24,
+//                             color: Colors.grey.shade500,
+//                           ),
+//                           items: [
+//                             const DropdownMenuItem(
+//                               value: 'all',
+//                               child: Text(
+//                                 'Tất cả lớp',
+//                                 style: TextStyle(
+//                                   fontSize: 15,
+//                                   fontWeight: FontWeight.w500,
+//                                   color: Colors.black87,
+//                                 ),
+//                               ),
+//                             ),
+//                             ...vm.availableClasses
+//                                 .map(
+//                                   (c) => DropdownMenuItem(
+//                                     value: c,
+//                                     child: Text(
+//                                       c,
+//                                       overflow: TextOverflow.ellipsis,
+//                                       style: const TextStyle(
+//                                         fontSize: 15,
+//                                         fontWeight: FontWeight.w500,
+//                                         color: Colors.black87,
+//                                       ),
+//                                     ),
+//                                   ),
+//                                 )
+//                                 .toList(),
+//                           ],
+//                           onChanged: (val) => vm.setSelectedClass(val!),
+//                         ),
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ],
+//           ),
+//           const SizedBox(height: 16),
+//           Row(
+//             children: [
+//               Expanded(
+//                 flex: 4,
+//                 child: ElevatedButton(
+//                   style: ElevatedButton.styleFrom(
+//                     backgroundColor: Colors.blue.shade600,
+//                     foregroundColor: Colors.white,
+//                     elevation: 0,
+//                     padding: const EdgeInsets.symmetric(vertical: 12),
+//                     shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(8),
+//                     ),
+//                   ),
+//                   onPressed: () => vm.refreshReport(context),
+//                   child: const Text(
+//                     'Tạo báo cáo',
+//                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+//                     maxLines: 1,
+//                     overflow: TextOverflow.ellipsis,
+//                   ),
+//                 ),
+//               ),
+//               const SizedBox(width: 8),
+//               Expanded(
+//                 flex: 3,
+//                 child: OutlinedButton.icon(
+//                   style: OutlinedButton.styleFrom(
+//                     foregroundColor: Colors.black87,
+//                     backgroundColor: Colors.white,
+//                     side: BorderSide(color: Colors.grey.shade300),
+//                     padding: const EdgeInsets.symmetric(
+//                       vertical: 12,
+//                       horizontal: 0,
+//                     ),
+//                     shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(8),
+//                     ),
+//                   ),
+//                   onPressed: () => _showExportDialog(context, vm, 'pdf'),
+//                   icon: const Icon(
+//                     Icons.picture_as_pdf_rounded,
+//                     size: 16,
+//                     color: Colors.redAccent,
+//                   ),
+//                   label: const Text(
+//                     'Xuất PDF',
+//                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+//                     maxLines: 1,
+//                     overflow: TextOverflow.ellipsis,
+//                   ),
+//                 ),
+//               ),
+//               const SizedBox(width: 8),
+//               Expanded(
+//                 flex: 3,
+//                 child: OutlinedButton.icon(
+//                   style: OutlinedButton.styleFrom(
+//                     foregroundColor: Colors.green.shade700,
+//                     backgroundColor: Colors.green.shade50,
+//                     side: BorderSide(color: Colors.green.shade200),
+//                     padding: const EdgeInsets.symmetric(
+//                       vertical: 12,
+//                       horizontal: 0,
+//                     ),
+//                     shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(8),
+//                     ),
+//                   ),
+//                   onPressed: () => _showExportDialog(context, vm, 'excel'),
+//                   icon: const Icon(Icons.table_view_rounded, size: 16),
+//                   label: const Text(
+//                     'Excel',
+//                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+//                     maxLines: 1,
+//                     overflow: TextOverflow.ellipsis,
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   // ✨ 5 THẺ THỐNG KÊ MỚI
+//   Widget _buildStatCardsRow(Map<String, dynamic> stats) {
+//     return GridView.count(
+//       shrinkWrap: true,
+//       physics: const NeverScrollableScrollPhysics(),
+//       crossAxisCount: 2,
+//       childAspectRatio: 1.35,
+//       mainAxisSpacing: 12,
+//       crossAxisSpacing: 12,
+//       children: [
+//         _buildSingleStatCard(
+//           '👥',
+//           'Hoàn thành (cả 4 trạm)',
+//           '${stats['total'] ?? 0}',
+//           Colors.blue.shade600,
+//           'Tất cả sinh viên',
+//         ),
+//         _buildSingleStatCard(
+//           '📉',
+//           'Thể trạng TB / Kém',
+//           '${stats['poor_health'] ?? 0}',
+//           Colors.brown.shade500,
+//           'Cần chú ý dinh dưỡng',
+//         ),
+//         _buildSingleStatCard(
+//           '🫀',
+//           'Huyết áp cao',
+//           '${stats['high_bp'] ?? 0}',
+//           Colors.red.shade500,
+//           'Nguy cơ tim mạch',
+//         ),
+//         _buildSingleStatCard(
+//           '🩸',
+//           'Huyết áp thấp',
+//           '${stats['low_bp'] ?? 0}',
+//           Colors.purple.shade400,
+//           'Cần theo dõi sát',
+//         ),
+//         _buildSingleStatCard(
+//           '👁️',
+//           'Giảm thị lực vừa/nặng',
+//           '${stats['poor_vision'] ?? 0}',
+//           Colors.orange.shade500,
+//           'Cần khám chuyên khoa',
+//         ),
+//       ],
+//     );
+//   }
+//
+//   Widget _buildSingleStatCard(
+//     String emoji,
+//     String label,
+//     String value,
+//     Color color,
+//     String sub,
+//   ) {
+//     return _buildCard(
+//       padding: const EdgeInsets.all(12),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         mainAxisAlignment: MainAxisAlignment.center,
+//         children: [
+//           Row(
+//             children: [
+//               Text(emoji, style: const TextStyle(fontSize: 18)),
+//               const SizedBox(width: 8),
+//               Expanded(
+//                 child: Text(
+//                   label,
+//                   style: TextStyle(
+//                     fontSize: 12,
+//                     color: Colors.grey.shade600,
+//                     fontWeight: FontWeight.w500,
+//                   ),
+//                   maxLines: 1,
+//                   overflow: TextOverflow.ellipsis,
+//                 ),
+//               ),
+//             ],
+//           ),
+//           const Spacer(),
+//           FittedBox(
+//             fit: BoxFit.scaleDown,
+//             alignment: Alignment.centerLeft,
+//             child: Text(
+//               value,
+//               style: TextStyle(
+//                 fontSize: 24,
+//                 fontWeight: FontWeight.bold,
+//                 color: color,
+//               ),
+//             ),
+//           ),
+//           Text(
+//             sub,
+//             style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+//             maxLines: 1,
+//             overflow: TextOverflow.ellipsis,
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   // ✨ ĐÃ CẬP NHẬT BIỂU ĐỒ 5 MỐC
+//   Widget _buildChartsRow(Map<String, dynamic> stats) {
+//     return Column(
+//       children: [
+//         _buildCard(
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               const Text(
+//                 'Phân bố BMI',
+//                 style: TextStyle(
+//                   fontSize: 14,
+//                   fontWeight: FontWeight.bold,
+//                   color: Colors.black87,
+//                 ),
+//               ),
+//               Text(
+//                 '${stats['total']} sinh viên hoàn thành',
+//                 style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+//               ),
+//               const SizedBox(height: 32),
+//               SizedBox(
+//                 height: 200,
+//                 child: BarChart(
+//                   BarChartData(
+//                     alignment: BarChartAlignment.spaceAround,
+//                     maxY: stats['total'].toDouble() * 1.3,
+//                     barTouchData: BarTouchData(
+//                       enabled: false,
+//                       touchTooltipData: BarTouchTooltipData(
+//                         tooltipBgColor: Colors.transparent,
+//                         tooltipPadding: EdgeInsets.zero,
+//                         tooltipMargin: 8,
+//                         getTooltipItem: (group, groupIndex, rod, rodIndex) {
+//                           return BarTooltipItem(
+//                             rod.toY.round().toString(),
+//                             TextStyle(
+//                               color: rod.color,
+//                               fontWeight: FontWeight.bold,
+//                               fontSize: 13,
+//                             ),
+//                           );
+//                         },
+//                       ),
+//                     ),
+//                     titlesData: FlTitlesData(
+//                       show: true,
+//                       bottomTitles: AxisTitles(
+//                         sideTitles: SideTitles(
+//                           showTitles: true,
+//                           reservedSize: 36,
+//                           getTitlesWidget: (double value, TitleMeta meta) {
+//                             const titles = [
+//                               'Gầy',
+//                               'Bình thường',
+//                               'Thừa cân',
+//                               'Béo phì 1',
+//                               'Béo phì 2',
+//                             ];
+//                             return Padding(
+//                               padding: const EdgeInsets.only(top: 8.0),
+//                               child: Text(
+//                                 titles[value.toInt()],
+//                                 style: TextStyle(
+//                                   color: Colors.grey.shade600,
+//                                   fontSize: 10,
+//                                   fontWeight: FontWeight.w600,
+//                                 ),
+//                               ),
+//                             );
+//                           },
+//                         ),
+//                       ),
+//                       leftTitles: const AxisTitles(
+//                         sideTitles: SideTitles(showTitles: false),
+//                       ),
+//                       topTitles: const AxisTitles(
+//                         sideTitles: SideTitles(showTitles: false),
+//                       ),
+//                       rightTitles: const AxisTitles(
+//                         sideTitles: SideTitles(showTitles: false),
+//                       ),
+//                     ),
+//                     gridData: FlGridData(
+//                       show: true,
+//                       drawVerticalLine: false,
+//                       getDrawingHorizontalLine: (value) =>
+//                           FlLine(color: Colors.grey.shade100, strokeWidth: 1),
+//                     ),
+//                     borderData: FlBorderData(show: false),
+//                     barGroups: [
+//                       _makeBarData(
+//                         0,
+//                         stats['underweight'].toDouble(),
+//                         Colors.blue.shade600,
+//                       ),
+//                       _makeBarData(
+//                         1,
+//                         stats['normal'].toDouble(),
+//                         Colors.green.shade600,
+//                       ),
+//                       _makeBarData(
+//                         2,
+//                         stats['overweight'].toDouble(),
+//                         Colors.orange.shade600,
+//                       ),
+//                       _makeBarData(
+//                         3,
+//                         stats['obese_1'].toDouble(),
+//                         Colors.red.shade600,
+//                       ),
+//                       _makeBarData(
+//                         4,
+//                         stats['obese_2'].toDouble(),
+//                         Colors.red.shade900,
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ],
+//     );
+//     //       const SizedBox(height: 16),
+//     //       _buildCard(
+//     //         child: Column(
+//     //           crossAxisAlignment: CrossAxisAlignment.start,
+//     //           children: [
+//     //             const Text(
+//     //               'Biểu đồ tròn BMI',
+//     //               style: TextStyle(
+//     //                 fontSize: 14,
+//     //                 fontWeight: FontWeight.bold,
+//     //                 color: Colors.black87,
+//     //               ),
+//     //             ),
+//     //             Text(
+//     //               'Tổng quan phân bố',
+//     //               style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+//     //             ),
+//     //             const SizedBox(height: 24),
+//     //             SizedBox(
+//     //               height: 160,
+//     //               child: PieChart(
+//     //                 PieChartData(
+//     //                   sectionsSpace: 2,
+//     //                   centerSpaceRadius: 40,
+//     //                   sections: [
+//     //                     if (stats['underweight'] > 0)
+//     //                       PieChartSectionData(
+//     //                         value: stats['underweight'].toDouble(),
+//     //                         color: Colors.blue.shade600,
+//     //                         title: '${stats['underweightPercent'].round()}%',
+//     //                         radius: 40,
+//     //                         titleStyle: const TextStyle(
+//     //                           fontSize: 12,
+//     //                           fontWeight: FontWeight.bold,
+//     //                           color: Colors.white,
+//     //                         ),
+//     //                       ),
+//     //                     if (stats['normal'] > 0)
+//     //                       PieChartSectionData(
+//     //                         value: stats['normal'].toDouble(),
+//     //                         color: Colors.green.shade600,
+//     //                         title: '${stats['normalPercent'].round()}%',
+//     //                         radius: 45,
+//     //                         titleStyle: const TextStyle(
+//     //                           fontSize: 12,
+//     //                           fontWeight: FontWeight.bold,
+//     //                           color: Colors.white,
+//     //                         ),
+//     //                       ),
+//     //                     if (stats['overweight'] > 0)
+//     //                       PieChartSectionData(
+//     //                         value: stats['overweight'].toDouble(),
+//     //                         color: Colors.orange.shade600,
+//     //                         title: '${stats['overweightPercent'].round()}%',
+//     //                         radius: 40,
+//     //                         titleStyle: const TextStyle(
+//     //                           fontSize: 12,
+//     //                           fontWeight: FontWeight.bold,
+//     //                           color: Colors.white,
+//     //                         ),
+//     //                       ),
+//     //                     if (stats['obese_1'] > 0)
+//     //                       PieChartSectionData(
+//     //                         value: stats['obese_1'].toDouble(),
+//     //                         color: Colors.red.shade600,
+//     //                         title: '${stats['obese1Percent'].round()}%',
+//     //                         radius: 40,
+//     //                         titleStyle: const TextStyle(
+//     //                           fontSize: 12,
+//     //                           fontWeight: FontWeight.bold,
+//     //                           color: Colors.white,
+//     //                         ),
+//     //                       ),
+//     //                     if (stats['obese_2'] > 0)
+//     //                       PieChartSectionData(
+//     //                         value: stats['obese_2'].toDouble(),
+//     //                         color: Colors.red.shade900,
+//     //                         title: '${stats['obese2Percent'].round()}%',
+//     //                         radius: 40,
+//     //                         titleStyle: const TextStyle(
+//     //                           fontSize: 12,
+//     //                           fontWeight: FontWeight.bold,
+//     //                           color: Colors.white,
+//     //                         ),
+//     //                       ),
+//     //                   ],
+//     //                 ),
+//     //               ),
+//     //             ),
+//     //             const SizedBox(height: 24),
+//     //
+//     //             // ✨ ĐÃ THÊM: Bảng chú thích (Legend)
+//     //             Wrap(
+//     //               spacing: 16,
+//     //               runSpacing: 12,
+//     //               alignment: WrapAlignment.center,
+//     //               children: [
+//     //                 _buildLegendItem(Colors.blue.shade600, 'Gầy'),
+//     //                 _buildLegendItem(Colors.green.shade600, 'Bình thường'),
+//     //                 _buildLegendItem(Colors.orange.shade600, 'Thừa cân'),
+//     //                 _buildLegendItem(Colors.red.shade600, 'Béo phì 1'),
+//     //                 _buildLegendItem(Colors.red.shade900, 'Béo phì 2'),
+//     //               ],
+//     //             ),
+//     //           ],
+//     //         ),
+//     //       ),
+//     //     ],
+//     //   );
+//     // }
+//     //
+//     // // Hàm hỗ trợ vẽ từng mục chú thích
+//     // Widget _buildLegendItem(Color color, String text) {
+//     //   return Row(
+//     //     mainAxisSize: MainAxisSize.min,
+//     //     children: [
+//     //       Container(
+//     //         width: 12,
+//     //         height: 12,
+//     //         decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+//     //       ),
+//     //       const SizedBox(width: 6),
+//     //       Text(
+//     //         text,
+//     //         style: TextStyle(
+//     //           fontSize: 12,
+//     //           color: Colors.grey.shade700,
+//     //           fontWeight: FontWeight.w500,
+//     //         ),
+//     //       ),
+//     //     ],
+//     //   );
+//   }
+//
+//   BarChartGroupData _makeBarData(int x, double y, Color color) {
+//     return BarChartGroupData(
+//       x: x,
+//       barRods: [
+//         BarChartRodData(
+//           toY: y,
+//           color: color,
+//           width: 22,
+//           borderRadius: const BorderRadius.only(
+//             topLeft: Radius.circular(4),
+//             topRight: Radius.circular(4),
+//           ),
+//         ),
+//       ],
+//       showingTooltipIndicators: [0],
+//     );
+//   }
+//
+//   Widget _buildClassCompletionChart(Map<String, int> classStats) {
+//     if (classStats.isEmpty) {
+//       return _buildCard(
+//         child: const Center(
+//           child: Padding(
+//             padding: EdgeInsets.all(16.0),
+//             child: Text(
+//               'Chưa có sinh viên nào hoàn thành cả 4 trạm.',
+//               style: TextStyle(color: Colors.grey),
+//             ),
+//           ),
+//         ),
+//       );
+//     }
+//
+//     final classNames = classStats.keys.toList();
+//     final completionCounts = classStats.values.toList();
+//
+//     double maxCount = completionCounts
+//         .reduce((a, b) => a > b ? a : b)
+//         .toDouble();
+//     if (maxCount == 0) maxCount = 10;
+//
+//     final barColors = [
+//       Colors.blue.shade500,
+//       Colors.purple.shade400,
+//       Colors.teal.shade500,
+//       Colors.orange.shade400,
+//       Colors.pink.shade400,
+//     ];
+//
+//     return _buildCard(
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           const Text(
+//             'Hoàn thành theo lớp',
+//             style: TextStyle(
+//               fontSize: 14,
+//               fontWeight: FontWeight.bold,
+//               color: Colors.black87,
+//             ),
+//           ),
+//           Text(
+//             'Sinh viên hoàn thành cả 4 trạm',
+//             style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+//           ),
+//           const SizedBox(height: 32),
+//           SizedBox(
+//             height: 180,
+//             child: BarChart(
+//               BarChartData(
+//                 alignment: BarChartAlignment.spaceAround,
+//                 maxY: maxCount * 1.3,
+//
+//                 barTouchData: BarTouchData(
+//                   enabled: false,
+//                   touchTooltipData: BarTouchTooltipData(
+//                     tooltipBgColor: Colors.transparent,
+//                     tooltipPadding: EdgeInsets.zero,
+//                     tooltipMargin: 8,
+//                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
+//                       return BarTooltipItem(
+//                         rod.toY.round().toString(),
+//                         TextStyle(
+//                           color: rod.color,
+//                           fontWeight: FontWeight.bold,
+//                           fontSize: 13,
+//                         ),
+//                       );
+//                     },
+//                   ),
+//                 ),
+//                 titlesData: FlTitlesData(
+//                   show: true,
+//                   bottomTitles: AxisTitles(
+//                     sideTitles: SideTitles(
+//                       showTitles: true,
+//                       reservedSize: 36,
+//                       getTitlesWidget: (double value, TitleMeta meta) {
+//                         final index = value.toInt();
+//                         if (index < 0 || index >= classNames.length)
+//                           return const SizedBox.shrink();
+//
+//                         return Padding(
+//                           padding: const EdgeInsets.only(top: 8.0),
+//                           child: Text(
+//                             classNames[index],
+//                             style: TextStyle(
+//                               color: Colors.grey.shade600,
+//                               fontSize: 11,
+//                               fontWeight: FontWeight.w600,
+//                             ),
+//                           ),
+//                         );
+//                       },
+//                     ),
+//                   ),
+//                   leftTitles: const AxisTitles(
+//                     sideTitles: SideTitles(showTitles: false),
+//                   ),
+//                   topTitles: const AxisTitles(
+//                     sideTitles: SideTitles(showTitles: false),
+//                   ),
+//                   rightTitles: const AxisTitles(
+//                     sideTitles: SideTitles(showTitles: false),
+//                   ),
+//                 ),
+//                 gridData: FlGridData(
+//                   show: true,
+//                   drawVerticalLine: false,
+//                   getDrawingHorizontalLine: (value) =>
+//                       FlLine(color: Colors.grey.shade100, strokeWidth: 1),
+//                 ),
+//                 borderData: FlBorderData(show: false),
+//                 barGroups: List.generate(classNames.length, (index) {
+//                   return _makeBarData(
+//                     index,
+//                     completionCounts[index].toDouble(),
+//                     barColors[index % barColors.length],
+//                   );
+//                 }),
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   // ✨ ĐÃ CẬP NHẬT BẢNG DATA 5 MỐC
+//   Widget _buildDataTable(Map<String, dynamic> stats) {
+//     final rows = [
+//       {
+//         'l': 'Gầy (Thiếu cân)',
+//         'v': stats['underweight'],
+//         'p': stats['underweightPercent'],
+//         'c': Colors.blue.shade600,
+//       },
+//       {
+//         'l': 'Bình thường',
+//         'v': stats['normal'],
+//         'p': stats['normalPercent'],
+//         'c': Colors.green.shade600,
+//       },
+//       {
+//         'l': 'Thừa cân (Tiền béo phì)',
+//         'v': stats['overweight'],
+//         'p': stats['overweightPercent'],
+//         'c': Colors.orange.shade600,
+//       },
+//       {
+//         'l': 'Béo phì độ 1',
+//         'v': stats['obese_1'],
+//         'p': stats['obese1Percent'],
+//         'c': Colors.red.shade600,
+//       },
+//       {
+//         'l': 'Béo phì độ 2',
+//         'v': stats['obese_2'],
+//         'p': stats['obese2Percent'],
+//         'c': Colors.red.shade900,
+//       },
+//     ];
+//
+//     return _buildCard(
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           const Text(
+//             'Bảng tổng hợp phân loại BMI',
+//             style: TextStyle(
+//               fontSize: 14,
+//               fontWeight: FontWeight.bold,
+//               color: Colors.black87,
+//             ),
+//           ),
+//           const SizedBox(height: 12),
+//
+//           Container(
+//             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+//             decoration: BoxDecoration(
+//               border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+//             ),
+//             child: Row(
+//               children: [
+//                 Expanded(
+//                   flex: 4,
+//                   child: Text(
+//                     'Phân loại',
+//                     style: TextStyle(
+//                       color: Colors.grey.shade600,
+//                       fontSize: 11,
+//                       fontWeight: FontWeight.bold,
+//                     ),
+//                   ),
+//                 ),
+//                 Expanded(
+//                   flex: 2,
+//                   child: Text(
+//                     'Số lượng',
+//                     style: TextStyle(
+//                       color: Colors.grey.shade600,
+//                       fontSize: 11,
+//                       fontWeight: FontWeight.bold,
+//                     ),
+//                   ),
+//                 ),
+//                 Expanded(
+//                   flex: 2,
+//                   child: Text(
+//                     'Tỷ lệ',
+//                     style: TextStyle(
+//                       color: Colors.grey.shade600,
+//                       fontSize: 11,
+//                       fontWeight: FontWeight.bold,
+//                     ),
+//                   ),
+//                 ),
+//                 Expanded(
+//                   flex: 1,
+//                   child: Text(
+//                     'Mức độ',
+//                     style: TextStyle(
+//                       color: Colors.grey.shade600,
+//                       fontSize: 11,
+//                       fontWeight: FontWeight.bold,
+//                     ),
+//                     textAlign: TextAlign.right,
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//
+//           ...rows.map(
+//             (r) => Container(
+//               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+//               decoration: BoxDecoration(
+//                 border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
+//               ),
+//               child: Row(
+//                 children: [
+//                   Expanded(
+//                     flex: 4,
+//                     child: Row(
+//                       children: [
+//                         Container(
+//                           width: 10,
+//                           height: 10,
+//                           decoration: BoxDecoration(
+//                             color: r['c'] as Color,
+//                             borderRadius: BorderRadius.circular(2),
+//                           ),
+//                         ),
+//                         const SizedBox(width: 8),
+//                         Expanded(
+//                           child: Text(
+//                             '${r['l']}',
+//                             style: const TextStyle(
+//                               fontSize: 13,
+//                               color: Colors.black87,
+//                               fontWeight: FontWeight.w500,
+//                             ),
+//                             maxLines: 1,
+//                             overflow: TextOverflow.ellipsis,
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                   Expanded(
+//                     flex: 2,
+//                     child: Text(
+//                       '${r['v']}',
+//                       style: const TextStyle(
+//                         fontSize: 13,
+//                         fontWeight: FontWeight.bold,
+//                         color: Colors.black87,
+//                       ),
+//                     ),
+//                   ),
+//                   Expanded(
+//                     flex: 2,
+//                     child: Text(
+//                       '${(r['p'] as double).round()}%',
+//                       style: TextStyle(
+//                         fontSize: 13,
+//                         color: Colors.grey.shade600,
+//                       ),
+//                     ),
+//                   ),
+//                   Expanded(
+//                     flex: 1,
+//                     child: Align(
+//                       alignment: Alignment.centerRight,
+//                       child: Icon(
+//                         Icons.circle,
+//                         size: 12,
+//                         color: r['c'] as Color,
+//                       ),
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildEmptyState() {
+//     return _buildCard(
+//       padding: const EdgeInsets.all(40),
+//       child: Center(
+//         child: Column(
+//           children: [
+//             Icon(
+//               Icons.analytics_outlined,
+//               size: 48,
+//               color: Colors.grey.shade400,
+//             ),
+//             const SizedBox(height: 16),
+//             const Text(
+//               'Chưa có dữ liệu thống kê',
+//               style: TextStyle(
+//                 fontSize: 16,
+//                 fontWeight: FontWeight.bold,
+//                 color: Colors.black87,
+//               ),
+//             ),
+//             Text(
+//               'Vui lòng chọn chiến dịch khác hoặc đợi sinh viên hoàn tất khám.',
+//               style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+//               textAlign: TextAlign.center,
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -1510,7 +2571,6 @@ class ReportsPage extends StatelessWidget {
           }
 
           final bmiStats = viewModel.bmiStats;
-          // ✨ GỌI BIẾN OVERVIEW STATS ĐỂ LẤY SỐ LIỆU ĐẾM Y KHOA (THỂ TRẠNG, HUYẾT ÁP, THỊ LỰC)
           final overviewStats = viewModel.overviewStats;
 
           return SingleChildScrollView(
@@ -1530,19 +2590,17 @@ class ReportsPage extends StatelessWidget {
                 if (bmiStats == null || bmiStats['total'] == 0)
                   _buildEmptyState()
                 else ...[
-                  // ✨ TRUYỀN OVERVIEW STATS VÀO 5 THẺ THỐNG KÊ TRÊN CÙNG
+                  // 1. Dãy 5 thẻ thống kê tổng quan
                   _buildStatCardsRow(overviewStats),
                   const SizedBox(height: 16),
 
-                  // ✨ TRUYỀN BMI STATS VÀO BIỂU ĐỒ (5 MỐC CHUẨN CHÂU Á)
+                  // 2. Biểu đồ Donut kết hợp Bảng chú thích (Mini Table) chuẩn Châu Á
                   _buildChartsRow(bmiStats),
                   const SizedBox(height: 16),
 
+                  // 3. Biểu đồ cột thể hiện hoàn thành theo lớp
                   _buildClassCompletionChart(viewModel.classCompletionStats),
                   const SizedBox(height: 16),
-
-                  // ✨ TRUYỀN BMI STATS VÀO BẢNG DỮ LIỆU (5 MỐC CHUẨN CHÂU Á)
-                  _buildDataTable(bmiStats),
                 ]
               ],
             ),
@@ -1552,7 +2610,9 @@ class ReportsPage extends StatelessWidget {
     );
   }
 
-  // --- WIDGETS CON ---
+  // ===========================================================================
+  // WIDGETS CON
+  // ===========================================================================
 
   void _showExportDialog(BuildContext context, ReportsViewModel vm, String type) {
     if (vm.bmiStats == null) return;
@@ -1693,7 +2753,6 @@ class ReportsPage extends StatelessWidget {
     );
   }
 
-  // ✨ 5 THẺ THỐNG KÊ MỚI
   Widget _buildStatCardsRow(Map<String, dynamic> stats) {
     return GridView.count(
       shrinkWrap: true,
@@ -1738,114 +2797,77 @@ class ReportsPage extends StatelessWidget {
     );
   }
 
-  // ✨ ĐÃ CẬP NHẬT BIỂU ĐỒ 5 MỐC
+  // ✨ Giao diện mới: Donut Chart kết hợp Mini Table
   Widget _buildChartsRow(Map<String, dynamic> stats) {
-    return Column(
-      children: [
-        _buildCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Phân bố BMI', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87)),
-              Text('${stats['total']} sinh viên hoàn thành', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
-              const SizedBox(height: 32),
-              SizedBox(
-                height: 200,
-                child: BarChart(
-                  BarChartData(
-                    alignment: BarChartAlignment.spaceAround,
-                    maxY: stats['total'].toDouble() * 1.3,
-                    barTouchData: BarTouchData(
-                      enabled: false,
-                      touchTooltipData: BarTouchTooltipData(
-                        tooltipBgColor: Colors.transparent,
-                        tooltipPadding: EdgeInsets.zero,
-                        tooltipMargin: 8,
-                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                          return BarTooltipItem(
-                            rod.toY.round().toString(),
-                            TextStyle(color: rod.color, fontWeight: FontWeight.bold, fontSize: 13),
-                          );
-                        },
-                      ),
-                    ),
-                    titlesData: FlTitlesData(
-                      show: true,
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 36,
-                          getTitlesWidget: (double value, TitleMeta meta) {
-                            const titles = ['Gầy', 'Bình thường', 'Thừa cân', 'Béo phì 1', 'Béo phì 2'];
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Text(titles[value.toInt()], style: TextStyle(color: Colors.grey.shade600, fontSize: 10, fontWeight: FontWeight.w600)),
-                            );
-                          },
-                        ),
-                      ),
-                      leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    ),
-                    gridData: FlGridData(show: true, drawVerticalLine: false, getDrawingHorizontalLine: (value) => FlLine(color: Colors.grey.shade100, strokeWidth: 1)),
-                    borderData: FlBorderData(show: false),
-                    barGroups: [
-                      _makeBarData(0, stats['underweight'].toDouble(), Colors.blue.shade600),
-                      _makeBarData(1, stats['normal'].toDouble(), Colors.green.shade600),
-                      _makeBarData(2, stats['overweight'].toDouble(), Colors.orange.shade600),
-                      _makeBarData(3, stats['obese_1'].toDouble(), Colors.red.shade600),
-                      _makeBarData(4, stats['obese_2'].toDouble(), Colors.red.shade900),
-                    ],
-                  ),
+    return _buildCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Phân bố thể trạng (BMI)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
+          Text('Theo chuẩn Châu Á (IDI & WPRO)', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+          const SizedBox(height: 24),
+
+          SizedBox(
+            height: 200,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('${stats['total']}', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.blue.shade700, height: 1.0)),
+                    Text('Sinh viên', style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                  ],
                 ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Biểu đồ tròn BMI', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87)),
-              Text('Tổng quan phân bố', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
-              const SizedBox(height: 24),
-              SizedBox(
-                height: 160,
-                child: PieChart(
+                PieChart(
                   PieChartData(
                     sectionsSpace: 2,
-                    centerSpaceRadius: 40,
+                    centerSpaceRadius: 60,
+                    startDegreeOffset: -90,
                     sections: [
-                      if (stats['underweight'] > 0) PieChartSectionData(value: stats['underweight'].toDouble(), color: Colors.blue.shade600, title: '${stats['underweightPercent'].round()}%', radius: 40, titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
-                      if (stats['normal'] > 0) PieChartSectionData(value: stats['normal'].toDouble(), color: Colors.green.shade600, title: '${stats['normalPercent'].round()}%', radius: 45, titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
-                      if (stats['overweight'] > 0) PieChartSectionData(value: stats['overweight'].toDouble(), color: Colors.orange.shade600, title: '${stats['overweightPercent'].round()}%', radius: 40, titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
-                      if (stats['obese_1'] > 0) PieChartSectionData(value: stats['obese_1'].toDouble(), color: Colors.red.shade600, title: '${stats['obese1Percent'].round()}%', radius: 40, titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
-                      if (stats['obese_2'] > 0) PieChartSectionData(value: stats['obese_2'].toDouble(), color: Colors.red.shade900, title: '${stats['obese2Percent'].round()}%', radius: 40, titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                      if (stats['underweight'] > 0) PieChartSectionData(value: stats['underweight'].toDouble(), color: Colors.blue.shade500, title: '', radius: 25),
+                      if (stats['normal'] > 0) PieChartSectionData(value: stats['normal'].toDouble(), color: Colors.green.shade500, title: '', radius: 25),
+                      if (stats['overweight'] > 0) PieChartSectionData(value: stats['overweight'].toDouble(), color: Colors.orange.shade500, title: '', radius: 25),
+                      if (stats['obese_1'] > 0) PieChartSectionData(value: stats['obese_1'].toDouble(), color: Colors.red.shade500, title: '', radius: 25),
+                      if (stats['obese_2'] > 0) PieChartSectionData(value: stats['obese_2'].toDouble(), color: Colors.red.shade900, title: '', radius: 25),
                     ],
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 32),
+
+          _buildDetailedLegend(Colors.blue.shade500, 'Gầy (Thiếu cân)', stats['underweight'], stats['underweightPercent']),
+          _buildDetailedLegend(Colors.green.shade500, 'Bình thường', stats['normal'], stats['normalPercent']),
+          _buildDetailedLegend(Colors.orange.shade500, 'Thừa cân (Tiền béo phì)', stats['overweight'], stats['overweightPercent']),
+          _buildDetailedLegend(Colors.red.shade500, 'Béo phì độ 1', stats['obese_1'], stats['obese1Percent']),
+          _buildDetailedLegend(Colors.red.shade900, 'Béo phì độ 2', stats['obese_2'], stats['obese2Percent']),
+        ],
+      ),
     );
   }
 
-  BarChartGroupData _makeBarData(int x, double y, Color color) {
-    return BarChartGroupData(
-      x: x,
-      barRods: [
-        BarChartRodData(
-          toY: y,
-          color: color,
-          width: 22,
-          borderRadius: const BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4)),
-        ),
-      ],
-      showingTooltipIndicators: [0],
+  Widget _buildDetailedLegend(Color color, String label, int count, double percent) {
+    if (count == 0) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        children: [
+          Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(label, style: TextStyle(fontSize: 13, color: Colors.grey.shade700, fontWeight: FontWeight.w500)),
+          ),
+          Text('$count SV', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black87)),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 50,
+            child: Text('${percent.toStringAsFixed(1)}%', style: TextStyle(fontSize: 13, color: Colors.grey.shade600, fontWeight: FontWeight.bold), textAlign: TextAlign.right),
+          )
+        ],
+      ),
     );
   }
 
@@ -1941,59 +2963,18 @@ class ReportsPage extends StatelessWidget {
     );
   }
 
-  // ✨ ĐÃ CẬP NHẬT BẢNG DATA 5 MỐC
-  Widget _buildDataTable(Map<String, dynamic> stats) {
-    final rows = [
-      {'l': 'Gầy (Thiếu cân)', 'v': stats['underweight'], 'p': stats['underweightPercent'], 'c': Colors.blue.shade600},
-      {'l': 'Bình thường', 'v': stats['normal'], 'p': stats['normalPercent'], 'c': Colors.green.shade600},
-      {'l': 'Thừa cân (Tiền béo phì)', 'v': stats['overweight'], 'p': stats['overweightPercent'], 'c': Colors.orange.shade600},
-      {'l': 'Béo phì độ 1', 'v': stats['obese_1'], 'p': stats['obese1Percent'], 'c': Colors.red.shade600},
-      {'l': 'Béo phì độ 2', 'v': stats['obese_2'], 'p': stats['obese2Percent'], 'c': Colors.red.shade900},
-    ];
-
-    return _buildCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Bảng tổng hợp phân loại BMI', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87)),
-          const SizedBox(height: 12),
-
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.shade300))),
-            child: Row(
-              children: [
-                Expanded(flex: 4, child: Text('Phân loại', style: TextStyle(color: Colors.grey.shade600, fontSize: 11, fontWeight: FontWeight.bold))),
-                Expanded(flex: 2, child: Text('Số lượng', style: TextStyle(color: Colors.grey.shade600, fontSize: 11, fontWeight: FontWeight.bold))),
-                Expanded(flex: 2, child: Text('Tỷ lệ', style: TextStyle(color: Colors.grey.shade600, fontSize: 11, fontWeight: FontWeight.bold))),
-                Expanded(flex: 1, child: Text('Mức độ', style: TextStyle(color: Colors.grey.shade600, fontSize: 11, fontWeight: FontWeight.bold), textAlign: TextAlign.right)),
-              ],
-            ),
-          ),
-
-          ...rows.map((r) => Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.shade100))),
-            child: Row(
-              children: [
-                Expanded(
-                    flex: 4,
-                    child: Row(
-                      children: [
-                        Container(width: 10, height: 10, decoration: BoxDecoration(color: r['c'] as Color, borderRadius: BorderRadius.circular(2))),
-                        const SizedBox(width: 8),
-                        Expanded(child: Text('${r['l']}', style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                      ],
-                    )
-                ),
-                Expanded(flex: 2, child: Text('${r['v']}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black87))),
-                Expanded(flex: 2, child: Text('${(r['p'] as double).round()}%', style: TextStyle(fontSize: 13, color: Colors.grey.shade600))),
-                Expanded(flex: 1, child: Align(alignment: Alignment.centerRight, child: Icon(Icons.circle, size: 12, color: r['c'] as Color))),
-              ],
-            ),
-          )),
-        ],
-      ),
+  BarChartGroupData _makeBarData(int x, double y, Color color) {
+    return BarChartGroupData(
+      x: x,
+      barRods: [
+        BarChartRodData(
+          toY: y,
+          color: color,
+          width: 22,
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(4), topRight: Radius.circular(4)),
+        ),
+      ],
+      showingTooltipIndicators: [0],
     );
   }
 
@@ -2006,7 +2987,7 @@ class ReportsPage extends StatelessWidget {
             Icon(Icons.analytics_outlined, size: 48, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             const Text('Chưa có dữ liệu thống kê', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
-            Text('Vui lòng chọn chiến dịch khác hoặc đợi sinh viên hoàn tất khám.', style: TextStyle(color: Colors.grey.shade500, fontSize: 13), textAlign: TextAlign.center),
+            Text('Vui lòng chọn chiến dịch khác hoặc đợi sinh viên khám thể lực.', style: TextStyle(color: Colors.grey.shade500, fontSize: 13), textAlign: TextAlign.center),
           ],
         ),
       ),
